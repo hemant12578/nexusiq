@@ -65,7 +65,7 @@ ${reportData.audit_verdict}
       link.click()
       document.body.removeChild(link)
     } catch (e) {
-      alert("Error generating audit report: " + e.message)
+      console.error("Report export failed:", e.message)
     }
     setDownloadingReport(false)
   }
