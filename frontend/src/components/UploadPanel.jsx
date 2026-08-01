@@ -1,6 +1,6 @@
 import { useState, useRef } from "react"
 import axios from "axios"
-import { FolderUp, FileUp, Mic, FileText, CheckCircle2, Zap, Sparkles, Database, Layers } from "lucide-react"
+import { FolderUp, FileUp, Mic, FileText, CheckCircle2, Zap, Sparkles, Database, Layers, AlertTriangle, X } from "lucide-react"
 
 export default function UploadPanel({ API, onUploadSuccess, setLoading }) {
   const [uploads, setUploads] = useState([])
@@ -9,8 +9,16 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading }) {
   const [dragOver, setDragOver] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [successFlash, setSuccessFlash] = useState(false)
+  const [toast, setToast] = useState(null)
   const mediaRef = useRef(null)
   const chunksRef = useRef([])
+  const toastTimer = useRef(null)
+
+  const showToast = (msg, type = 'error') => {
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    setToast({ msg, type })
+    toastTimer.current = setTimeout(() => setToast(null), 4000)
+  }
 
   const flashSuccess = () => {
     setSuccessFlash(true)
@@ -35,7 +43,7 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading }) {
       onUploadSuccess()
       flashSuccess()
     } catch (e) {
-      alert("Upload failed: " + (e.response?.data?.detail || e.message))
+      showToast(e.response?.data?.detail || e.message)
     }
     setLoading(false)
     setUploading(false)
@@ -45,11 +53,11 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading }) {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       if (file.type !== "application/pdf") {
-        alert("Only PDF files are accepted");
+        showToast('Only PDF files are accepted');
         continue;
       }
       if (file.size > 10 * 1024 * 1024) {
-        alert(`File ${file.name} is too large (> 10MB). Refusing to upload.`);
+        showToast(`${file.name} is too large (max 10MB)`);
         continue;
       }
       await uploadPDF(file);
@@ -80,7 +88,7 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading }) {
           onUploadSuccess()
           flashSuccess()
         } catch (e) {
-          alert("Audio upload failed")
+          showToast('Audio upload failed')
         }
         setLoading(false)
         setUploading(false)
@@ -89,7 +97,7 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading }) {
       mediaRef.current.start()
       setRecording(true)
     } catch (e) {
-      alert("Microphone access denied")
+      showToast('Microphone access denied')
     }
   }
 
@@ -118,7 +126,7 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading }) {
       onUploadSuccess()
       flashSuccess()
     } catch (e) {
-      alert("Text upload failed")
+      showToast('Text upload failed')
     }
     setLoading(false)
     setUploading(false)
@@ -132,6 +140,20 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading }) {
 
       {successFlash && (
         <div className="absolute inset-0 bg-emerald-500/5 z-10 pointer-events-none animate-fade-in rounded-lg" />
+      )}
+
+      {toast && (
+        <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium animate-slide-up ${
+          toast.type === 'error'
+            ? 'bg-red-950/80 border border-red-800/40 text-red-300'
+            : 'bg-amber-950/80 border border-amber-800/40 text-amber-300'
+        }`}>
+          <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+          <span className="flex-1">{toast.msg}</span>
+          <button onClick={() => setToast(null)} className="p-0.5 hover:text-white transition-colors">
+            <X className="w-3 h-3" />
+          </button>
+        </div>
       )}
 
       <h2 className="text-purple-400 font-semibold text-xs uppercase tracking-widest flex items-center gap-2">
