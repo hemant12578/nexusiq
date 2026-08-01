@@ -72,7 +72,7 @@ ${reportData.audit_verdict}
 
   return (
     <header className={`border-b border-purple-900/30 px-6 py-3.5 flex items-center justify-between bg-nexus-900/95 backdrop-blur-2xl z-30 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
-      {/* Brand & Logo */}
+
       <div className="flex items-center gap-6">
         <div
           onClick={() => onNavigate("landing")}
@@ -85,12 +85,12 @@ ${reportData.audit_verdict}
           <div>
             <div className="font-extrabold text-lg tracking-tight gradient-text">NexusIQ</div>
             <div className="text-[10px] text-gray-500 font-light tracking-wide">
-              Zero-Hallucination Compliance Intelligence
+              Compliance Knowledge Graph
             </div>
           </div>
         </div>
 
-        {/* Navigation Tabs */}
+
         <nav className="hidden md:flex items-center gap-1.5 pl-6 border-l border-purple-900/30">
           <button
             onClick={() => onNavigate("landing")}
@@ -118,7 +118,7 @@ ${reportData.audit_verdict}
         </nav>
       </div>
 
-      {/* Right Stats & Auth controls */}
+
       <div className="flex gap-6 text-sm items-center">
         {currentPage === "app" && (
           <div className="hidden lg:flex items-center gap-6">
@@ -140,7 +140,7 @@ ${reportData.audit_verdict}
               </div>
             ))}
 
-            {/* Export Audit Report Button */}
+
             <button
               onClick={handleExportAuditReport}
               disabled={downloadingReport}
@@ -151,7 +151,7 @@ ${reportData.audit_verdict}
               <span>{downloadingReport ? "Generating..." : "Export Audit Brief"}</span>
             </button>
 
-            {/* Hallucination Badge */}
+
             <div className="flex items-center gap-2 pl-4 border-l border-purple-900/30">
               <div className="relative">
                 <div className="w-2 h-2 rounded-full bg-emerald-400" />
@@ -165,7 +165,7 @@ ${reportData.audit_verdict}
           </div>
         )}
 
-        {/* User Auth Action */}
+
         <div className="pl-4 border-l border-purple-900/30">
           {user ? (
             <div className="flex items-center gap-3">
@@ -187,7 +187,7 @@ ${reportData.audit_verdict}
               className="px-4 py-2 bg-purple-900/40 hover:bg-purple-800/50 border border-purple-700/40 rounded-xl text-xs font-semibold text-purple-200 transition-all hover-lift flex items-center gap-1.5"
             >
               <Lock className="w-3.5 h-3.5 text-purple-400" />
-              <span>Portal Login</span>
+              <span>Sign in</span>
             </button>
           )}
         </div>

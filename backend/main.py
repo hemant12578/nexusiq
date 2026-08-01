@@ -39,8 +39,7 @@ def root():
     return {
         "product": "NexusIQ",
         "status": "running",
-        "version": "1.0.0",
-        "compliance_engine": "Graph RAG + NetworkX PageRank"
+        "version": "1.0.0"
     }
 
 @app.get("/health")
@@ -48,6 +47,7 @@ def health():
     return {"status": "healthy", "uptime": time.time() - stats["start_time"]}
 
 @app.post("/upload-pdf")
+# rate limit to avoid abuse
 @limiter.limit("30/minute")
 async def upload_pdf(request: Request, file: UploadFile = File(...)):
     if not file.filename.endswith(".pdf"):

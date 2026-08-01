@@ -7,10 +7,10 @@ export default function Canvas3D() {
   useEffect(() => {
     if (!containerRef.current) return
 
-    // Scene setup
+
     const scene = new THREE.Scene()
     
-    // Camera
+
     const camera = new THREE.PerspectiveCamera(
       60,
       window.innerWidth / window.innerHeight,
@@ -19,13 +19,13 @@ export default function Canvas3D() {
     )
     camera.position.z = 300
 
-    // Renderer
+
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
     renderer.setSize(window.innerWidth, window.innerHeight)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     containerRef.current.appendChild(renderer.domElement)
 
-    // Particles system
+
     const particleCount = 220
     const geometry = new THREE.BufferGeometry()
     const positions = new Float32Array(particleCount * 3)
@@ -52,7 +52,7 @@ export default function Canvas3D() {
     geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3))
     geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3))
 
-    // Particle texture
+
     const canvas = document.createElement("canvas")
     canvas.width = 64
     canvas.height = 64
@@ -78,7 +78,7 @@ export default function Canvas3D() {
     const particleSystem = new THREE.Points(geometry, material)
     scene.add(particleSystem)
 
-    // Lines mesh connecting close particles
+
     const lineMaterial = new THREE.LineBasicMaterial({
       color: 0x7c3aed,
       transparent: true,
@@ -92,7 +92,7 @@ export default function Canvas3D() {
     const lineMesh = new THREE.LineSegments(lineGeometry, lineMaterial)
     scene.add(lineMesh)
 
-    // Mouse tracking
+
     let mouseX = 0
     let mouseY = 0
 
@@ -103,7 +103,7 @@ export default function Canvas3D() {
 
     window.addEventListener("mousemove", handleMouseMove)
 
-    // Window resize
+
     const handleResize = () => {
       camera.aspect = window.innerWidth / window.innerHeight
       camera.updateProjectionMatrix()
@@ -112,7 +112,7 @@ export default function Canvas3D() {
 
     window.addEventListener("resize", handleResize)
 
-    // Animation Loop
+
     let animationFrameId
     let clock = new THREE.Clock()
 
@@ -126,12 +126,12 @@ export default function Canvas3D() {
       lineMesh.rotation.y = elapsedTime * 0.05
       lineMesh.rotation.x = elapsedTime * 0.02
 
-      // Smooth camera follow mouse
+
       camera.position.x += (mouseX - camera.position.x) * 0.03
       camera.position.y += (-mouseY - camera.position.y) * 0.03
       camera.lookAt(scene.position)
 
-      // Update lines between nearby particles
+
       const pos = particleSystem.geometry.attributes.position.array
       let lineIndex = 0
 

@@ -129,17 +129,17 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading }) {
 
   return (
     <div className="p-4 space-y-4 animate-slide-in-left relative">
-      {/* Success flash overlay */}
+
       {successFlash && (
         <div className="absolute inset-0 bg-emerald-500/5 z-10 pointer-events-none animate-fade-in rounded-lg" />
       )}
 
       <h2 className="text-purple-400 font-semibold text-xs uppercase tracking-widest flex items-center gap-2">
         <Database className="w-4 h-4 text-purple-400" />
-        <span>Multi-Modal Ingestion</span>
+        <span>Upload documents</span>
       </h2>
 
-      {/* PDF Drop Zone */}
+
       <div
         className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-500 ripple-effect hover-lift ${
           dragOver
@@ -163,7 +163,7 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading }) {
         <div className="text-sm text-gray-300 font-medium">
           {uploading ? 'Processing document...' : 'Drop PDF here or click to upload'}
         </div>
-        <div className="text-xs text-gray-600 mt-1 font-light">Supports regulatory compliance assets</div>
+        <div className="text-xs text-gray-600 mt-1 font-light">PDF, audio, or text</div>
         <input
           id="pdfInput"
           type="file"
@@ -174,7 +174,7 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading }) {
         />
       </div>
 
-      {/* Audio Recording */}
+
       <button
         onClick={recording ? stopRecording : startRecording}
         className={`w-full py-3.5 rounded-xl font-semibold text-xs uppercase tracking-wider transition-all duration-500 ripple-effect hover-lift flex items-center justify-center gap-2 ${
@@ -187,7 +187,7 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading }) {
         <span>{recording ? "Stop Audio Incident Capture" : "Record Audio Incident Log"}</span>
       </button>
 
-      {/* Text Input */}
+
       <div className="space-y-2">
         <textarea
           value={text}
@@ -214,12 +214,12 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading }) {
         </button>
       </div>
 
-      {/* Upload History */}
+
       {uploads.length > 0 && (
         <div className="space-y-2 pt-2">
           <h3 className="text-[10px] text-gray-500 uppercase tracking-widest font-semibold flex items-center gap-1.5">
             <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-            <span>Ingested Artifacts ({uploads.length})</span>
+            <span>Uploaded ({uploads.length})</span>
           </h3>
           {uploads.map((u, i) => {
             const IconComp = typeIcons[u.type] || FileUp

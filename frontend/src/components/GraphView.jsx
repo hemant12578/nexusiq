@@ -41,7 +41,7 @@ export default function GraphView({ graphData, onNodeClick }) {
 
     const defs = svg.append("defs")
 
-    // ── Animated background gradient ──
+
     const radialGrad = defs.append("radialGradient")
       .attr("id", "bgGlow")
       .attr("cx", "50%").attr("cy", "50%").attr("r", "50%")
@@ -51,21 +51,21 @@ export default function GraphView({ graphData, onNodeClick }) {
       .attr("width", width).attr("height", height)
       .attr("fill", "url(#bgGlow)")
 
-    // ── Glow filter (soft) ──
+
     const filterSoft = defs.append("filter").attr("id", "glow-soft")
     filterSoft.append("feGaussianBlur").attr("stdDeviation", "3").attr("result", "coloredBlur")
     const fmSoft = filterSoft.append("feMerge")
     fmSoft.append("feMergeNode").attr("in", "coloredBlur")
     fmSoft.append("feMergeNode").attr("in", "SourceGraphic")
 
-    // ── Glow filter (strong, for hover) ──
+
     const filterStrong = defs.append("filter").attr("id", "glow-strong")
     filterStrong.append("feGaussianBlur").attr("stdDeviation", "6").attr("result", "coloredBlur")
     const fmStrong = filterStrong.append("feMerge")
     fmStrong.append("feMergeNode").attr("in", "coloredBlur")
     fmStrong.append("feMergeNode").attr("in", "SourceGraphic")
 
-    // ── Animated grid pattern ──
+
     const patternSize = 40
     const gridPattern = defs.append("pattern")
       .attr("id", "grid").attr("width", patternSize).attr("height", patternSize)
@@ -78,7 +78,7 @@ export default function GraphView({ graphData, onNodeClick }) {
       .attr("fill", "url(#grid)")
       .attr("opacity", 0.5)
 
-    // ── Arrow marker ──
+
     defs.append("marker")
       .attr("id", "arrow")
       .attr("viewBox", "0 -5 10 10")
@@ -118,7 +118,7 @@ export default function GraphView({ graphData, onNodeClick }) {
 
     simulationRef.current = simulation
 
-    // ── Links with animated dash ──
+
     const link = g.append("g")
       .selectAll("line")
       .data(links)
@@ -129,13 +129,13 @@ export default function GraphView({ graphData, onNodeClick }) {
       .attr("stroke-dasharray", "6 3")
       .attr("marker-end", "url(#arrow)")
 
-    // Animate links appearing
+
     link.transition()
       .delay((d, i) => 300 + i * 50)
       .duration(600)
       .attr("stroke-opacity", 0.3)
 
-    // Animate dash movement
+
     function animateDash() {
       link
         .attr("stroke-dashoffset", 0)
@@ -147,7 +147,7 @@ export default function GraphView({ graphData, onNodeClick }) {
     }
     animateDash()
 
-    // ── Link labels ──
+
     const linkLabel = g.append("g")
       .selectAll("text")
       .data(links)
@@ -165,7 +165,7 @@ export default function GraphView({ graphData, onNodeClick }) {
       .duration(400)
       .attr("fill-opacity", 0.5)
 
-    // ── Outer glow ring (animated breathing) ──
+
     const nodeGlow = g.append("g")
       .selectAll("circle")
       .data(nodes)
@@ -177,14 +177,14 @@ export default function GraphView({ graphData, onNodeClick }) {
       .attr("stroke-width", 5)
       .attr("filter", "url(#glow-soft)")
 
-    // Animate glow rings appearing
+
     nodeGlow.transition()
       .delay((d, i) => i * 80)
       .duration(800)
       .ease(d3.easeElasticOut.amplitude(1).period(0.5))
       .attr("r", 24)
 
-    // Breathing animation on glow rings
+
     function breathe() {
       nodeGlow
         .transition()
@@ -201,7 +201,7 @@ export default function GraphView({ graphData, onNodeClick }) {
     }
     setTimeout(breathe, 1500)
 
-    // ── Nodes (with elastic entrance) ──
+
     const node = g.append("g")
       .selectAll("circle")
       .data(nodes)
@@ -214,7 +214,7 @@ export default function GraphView({ graphData, onNodeClick }) {
       .style("cursor", "pointer")
       .attr("filter", "url(#glow-soft)")
 
-    // Elastic pop-in animation
+
     node.transition()
       .delay((d, i) => i * 60)
       .duration(900)
@@ -223,7 +223,7 @@ export default function GraphView({ graphData, onNodeClick }) {
 
     node
       .on("click", (event, d) => {
-        // Click ripple
+
         const clickCircle = g.append("circle")
           .attr("cx", d.x).attr("cy", d.y)
           .attr("r", 16)
@@ -247,7 +247,7 @@ export default function GraphView({ graphData, onNodeClick }) {
           .attr("filter", "url(#glow-strong)")
           .attr("stroke-width", 3)
 
-        // Highlight connected links
+
         link.transition().duration(200)
           .attr("stroke-opacity", l =>
             l.source.id === d.id || l.target.id === d.id ? 0.7 : 0.1
@@ -289,7 +289,7 @@ export default function GraphView({ graphData, onNodeClick }) {
           })
       )
 
-    // ── Labels (fade in) ──
+
     const label = g.append("g")
       .selectAll("text")
       .data(nodes)
@@ -310,7 +310,7 @@ export default function GraphView({ graphData, onNodeClick }) {
       .duration(500)
       .attr("fill-opacity", 0.85)
 
-    // ── Tick ──
+
     simulation.on("tick", () => {
       link
         .attr("x1", d => d.source.x).attr("y1", d => d.source.y)

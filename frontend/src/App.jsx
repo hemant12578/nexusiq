@@ -11,7 +11,7 @@ import Canvas3D from "./components/Canvas3D"
 import axios from "axios"
 import { BrainCircuit, FileUp, Mic, FileText } from "lucide-react"
 
-// Default to live Railway Production API, with fallback override via VITE_API_URL
+// api base url
 const API = import.meta.env.VITE_API_URL || "https://nexusiq-backend-production.up.railway.app"
 
 export default function App() {
@@ -67,10 +67,9 @@ export default function App() {
 
   return (
     <div className={`min-h-screen bg-nexus-900 text-white flex flex-col font-sans transition-opacity duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-      {/* 3D Three.js Interactive Particle Background */}
       <Canvas3D />
 
-      {/* Header Bar */}
+
       <Header
         stats={stats}
         currentPage={currentPage}
@@ -80,7 +79,7 @@ export default function App() {
         API={API}
       />
 
-      {/* Dynamic Page Rendering */}
+
       {currentPage === "landing" && (
         <LandingPage onNavigate={setCurrentPage} />
       )}
@@ -97,7 +96,7 @@ export default function App() {
           <StatsBar stats={stats} />
 
           <div className="flex flex-1 overflow-hidden">
-            {/* Left Ingestion Panel */}
+
             <div className="w-80 border-r border-purple-900/20 overflow-y-auto glass-strong">
               <UploadPanel
                 API={API}
@@ -106,12 +105,12 @@ export default function App() {
               />
             </div>
 
-            {/* Center Knowledge Web View */}
+
             <div className="flex-1 relative overflow-hidden">
               {loading && (
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-md z-10 flex items-center justify-center animate-fade-in">
                   <div className="flex flex-col items-center gap-4">
-                    {/* Triple ring spinner */}
+
                     <div className="relative w-16 h-16">
                       <div className="absolute inset-0 border-2 border-purple-500/30 border-t-purple-400 rounded-full animate-spin" />
                       <div className="absolute inset-2 border-2 border-cyan-500/20 border-b-cyan-400 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '0.8s' }} />
@@ -130,7 +129,7 @@ export default function App() {
                 onNodeClick={setSelectedNode}
               />
 
-              {/* Empty state canvas overlay */}
+
               {graphData.nodes.length === 0 && !loading && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="text-center space-y-5 animate-float pointer-events-auto max-w-md p-8 rounded-3xl bg-nexus-800/40 backdrop-blur-xl border border-purple-900/30 glow-border">
@@ -159,13 +158,13 @@ export default function App() {
                 </div>
               )}
 
-              {/* Selected Node Details Drawer */}
+
               {selectedNode && (
                 <NodeDetail node={selectedNode} onClose={() => setSelectedNode(null)} />
               )}
             </div>
 
-            {/* Right Compliance Query Panel */}
+
             <div className="w-96 border-l border-purple-900/20 overflow-y-auto glass-strong">
               <QueryInterface API={API} onQuery={() => { fetchGraph(); fetchStats(); }} />
             </div>

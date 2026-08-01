@@ -94,7 +94,7 @@ export default function QueryInterface({ API, onQuery }) {
           {loading ? (
             <span className="flex items-center justify-center gap-2">
               <span className="w-3.5 h-3.5 border-2 border-purple-300/30 border-t-white rounded-full animate-spin" />
-              <span className="animate-pulse">Searching Knowledge Graph...</span>
+              <span className="animate-pulse">Searching...</span>
             </span>
           ) : (
             <>
@@ -105,7 +105,7 @@ export default function QueryInterface({ API, onQuery }) {
         </button>
       </div>
 
-      {/* Loading Skeleton */}
+
       {loading && (
         <div className="space-y-3 p-4 bg-nexus-800/30 rounded-xl border border-purple-900/20 animate-fade-in">
           <div className="h-3 bg-purple-900/30 rounded-full shimmer" style={{ width: '85%' }} />
@@ -114,10 +114,10 @@ export default function QueryInterface({ API, onQuery }) {
         </div>
       )}
 
-      {/* Answer Panel */}
+
       {answer && !loading && (
         <div ref={answerRef} className="bg-nexus-800/60 rounded-2xl p-4 border border-purple-700/30 space-y-3 animate-fade-in glow-border">
-          {/* Metadata pills */}
+
           <div className="flex items-center gap-2">
             {answer.nodes !== undefined && (
               <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-medium bg-purple-900/60 text-purple-300 flex items-center gap-1">
@@ -139,17 +139,17 @@ export default function QueryInterface({ API, onQuery }) {
             </span>
           </div>
 
-          {/* Answer Content */}
+
           <div className="text-xs text-gray-200 leading-relaxed whitespace-pre-wrap font-light">
             <TypingEffect text={answer.answer} speed={8} />
           </div>
 
-          {/* Cited Sources */}
+
           {answer.sources?.length > 0 && (
             <div className="border-t border-purple-900/30 pt-3 animate-fade-in">
               <div className="text-[10px] text-purple-400 font-bold mb-2 uppercase tracking-widest flex items-center gap-1.5">
                 <Sparkles className="w-3 h-3 text-purple-400" />
-                <span>Verified Source Citations</span>
+                <span>Sources</span>
               </div>
               {answer.sources.map((s, i) => (
                 <div
@@ -166,7 +166,7 @@ export default function QueryInterface({ API, onQuery }) {
         </div>
       )}
 
-      {/* Query History Stack */}
+
       {history.length > 1 && (
         <div className="space-y-2">
           <h3 className="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">

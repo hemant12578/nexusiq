@@ -32,7 +32,7 @@ def blink_led(times=3):
         time.sleep(0.2)
 
 def save_to_offline_queue(payload: dict):
-    """Saves incident payload locally if backend is unreachable."""
+    """save to local queue"""
     queue = []
     if os.path.exists(QUEUE_FILE):
         try:
@@ -129,17 +129,16 @@ def health_check():
 def send_telemetry():
     """Sends edge environment security telemetry to cloud graph."""
     temp = round(22.5 + random.uniform(-1.5, 2.5), 1)
-    status_msg = f"RPi Edge Security Telemetry: Ambient Temp {temp}°C | Physical Lock Integrity Verified | Network Cryptography Active."
+    status_msg = f"rpi heartbeat: temp={temp}C, lock=ok, net=ok"
     forward_text(status_msg, "rpi_telemetry_node")
 
 if __name__ == "__main__":
     print("=" * 65)
-    print("  NexusIQ Enterprise Raspberry Pi Edge Agent")
-    print(f"  Cloud Endpoint : {BACKEND_URL}")
+    print("  NexusIQ Edge Agent v1")
+    print(f"  Backend : {BACKEND_URL}")
     print(f"  GPIO Hardware  : {'RPi.GPIO Active (Pin 18)' if GPIO_AVAILABLE else 'Simulated Mode'}")
     print("=" * 65)
 
-    # Check CLI arguments for manual upload
     if len(sys.argv) > 1:
         file_arg = sys.argv[1]
         forward_audio(file_arg)
@@ -158,7 +157,7 @@ if __name__ == "__main__":
                 if count % 4 == 0:  # Send security telemetry periodically
                     send_telemetry()
             else:
-                print(f"[{time.strftime('%H:%M:%S')}] [FAIL] Backend Unreachable - Operating in Resilient Offline Mode")
+                print(f"[{time.strftime('%H:%M:%S')}] [FAIL] backend down, queuing locally")
             
             count += 1
             time.sleep(30)

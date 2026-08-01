@@ -39,7 +39,7 @@ export default function StatsBar({ stats }) {
       </div>
 
       <div className="flex items-center gap-4">
-        {/* Compliance Risk Readiness Meter */}
+
         <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-purple-950/60 border border-purple-800/40 text-[11px]">
           <Gauge className="w-3 h-3 text-cyan-400" />
           <span className="text-gray-400 font-medium">Compliance Readiness:</span>
@@ -51,9 +51,9 @@ export default function StatsBar({ stats }) {
 
         <span className="flex items-center gap-2">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-          <span className="gradient-text font-semibold">Graph RAG Active</span>
+          <span className="gradient-text font-semibold">RAG active</span>
           <span className="text-gray-600">—</span>
-          <span>Zero Hallucination Guarantee</span>
+          <span>grounded answers</span>
         </span>
       </div>
     </div>

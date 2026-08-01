@@ -44,7 +44,7 @@ export default function NodeDetail({ node, onClose }) {
   return (
     <div className={`absolute bottom-6 left-6 w-80 z-20 transition-all duration-300 ${visible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-95'}`}>
       <div className="bg-nexus-800/95 backdrop-blur-2xl rounded-2xl border border-purple-700/25 shadow-2xl shadow-purple-900/40 overflow-hidden glow-border">
-        {/* Animated color accent bar */}
+
         <div className="h-1 relative overflow-hidden">
           <div
             className="absolute inset-0"
@@ -53,7 +53,7 @@ export default function NodeDetail({ node, onClose }) {
         </div>
 
         <div className="p-5 space-y-4">
-          {/* Header */}
+
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
               <div
@@ -80,7 +80,7 @@ export default function NodeDetail({ node, onClose }) {
             </button>
           </div>
 
-          {/* Details list */}
+
           <div className="space-y-0 text-xs">
             <div className="flex items-center justify-between py-2 border-t border-purple-900/15">
               <span className="text-[10px] text-gray-500 uppercase tracking-wider flex items-center gap-1">
@@ -113,10 +113,10 @@ export default function NodeDetail({ node, onClose }) {
             </div>
           </div>
 
-          {/* Connection strength progress bar */}
+
           <div className="pt-1">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Node Degree Density</span>
+              <span className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Connectivity</span>
               <span className="text-[10px] text-purple-400 font-semibold font-mono">
                 {Math.min((node.connections || 0) * 15, 100)}%
               </span>

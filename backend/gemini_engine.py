@@ -16,9 +16,8 @@ if GEMINI_KEY:
 # Primary Gemini Models
 GEMINI_MODELS = [
     "gemini-2.5-flash",
+    "gemini-2.5-pro",
     "gemini-2.0-flash",
-    "gemini-1.5-flash",
-    "gemini-flash-latest",
 ]
 
 # OpenRouter Free Models
@@ -35,13 +34,9 @@ OPENROUTER_FREE_MODELS = [
 ]
 
 EXTRACT_PROMPT = """
-You are NexusIQ's enterprise compliance data extraction engine.
+Extract entities and relationships from the given text.
 
-Analyze the following document and extract ALL entities and 
-relationships for a knowledge graph.
-
-Return ONLY a valid JSON object. No markdown. No explanation. 
-No code blocks. Pure JSON only.
+Return ONLY a valid JSON object.
 
 Format:
 {
@@ -62,50 +57,43 @@ Format:
 }
 
 Rules:
-- Use DESCRIPTIVE IDs like john_doe instead of e1, e2, e3. Use snake_case of the entity name as the ID (e.g., 'john_doe', 'iso_27001_policy')
-- Extract minimum 5 entities if document has enough content
-- For relationships, if a table or structured data is detected, extract each row as a separate entity
-- Relationships must reference valid entity ids only
-- Be precise and compliance-focused
+- Use snake_case ids
+- Extract around 5 entities if possible
+- Rows in tables should be separate entities
+- Valid entity ids only for relationships
 
 Document to analyze:
 {text}
 """
 
 QUERY_PROMPT = """
-You are NexusIQ - a zero-hallucination enterprise compliance intelligence assistant.
-
-Your knowledge graph contains the following verified compliance data:
+Answer the question using ONLY the knowledge graph data below. Cite sources.
 
 {context}
 
-User Question: {question}
+Question: {question}
 
-STRICT RULES:
-1. Answer ONLY using information present in the knowledge graph above.
-2. Every claim regarding compliance data MUST have a clear source citation from the graph.
-3. If the user question cannot be answered from the knowledge graph above, respond with:
-   "This information is not available in the current NexusIQ compliance database."
-4. Never guess, infer, or hallucinate beyond what the graph states.
-5. Be concise, precise, and professional.
+Rules:
+1. Answer ONLY using the graph info.
+2. Cite sources.
+3. If not in the graph, say "Not available."
+4. Don't guess.
 
 Response Format:
-[Your direct answer here]
+[Answer]
 
 SOURCES:
-- [Entity name] from [source document]
+- [Entity] from [source document]
 """
 
 AUDIO_PROMPT = """
-You are a compliance incident transcription system.
+Transcribe this audio and extract entities.
 
-Transcribe the following audio content and extract compliance information.
-
-Return ONLY valid JSON:
+Return JSON:
 {
-  "transcript": "full accurate transcription",
-  "compliance_entities": ["list", "of", "entities", "mentioned"],
-  "incident_type": "type of compliance incident if mentioned",
+  "transcript": "full text",
+  "entities": ["list", "of", "entities"],
+  "type": "incident type if any",
   "severity": "low|medium|high|critical"
 }
 """
@@ -118,7 +106,6 @@ def get_hallucination_stats() -> dict:
     return stats
 
 def call_openrouter_free(prompt: str) -> str:
-    """Call OpenRouter using free models with fallback across all free endpoints."""
     if not OPENROUTER_KEY:
         raise Exception("OpenRouter key not found")
 
@@ -156,7 +143,7 @@ def call_openrouter_free(prompt: str) -> str:
     raise Exception(f"All OpenRouter free models failed: {last_error}")
 
 def generate_text_response(prompt: str) -> str:
-    """Try Gemini API first, fall back to OpenRouter free models."""
+    # fallback chain - try gemini first, then openrouter
     if GEMINI_KEY:
         for model_name in GEMINI_MODELS:
             try:
@@ -196,14 +183,14 @@ def answer_query(question: str, context: str, graph_node_count: int = 0, graph_e
     # 1. Direct Python handler for Greetings & Common FAQ phrases
     q_norm = question.strip().lower().rstrip("?!.")
     greetings = {
-        "hi": "Hello! I am NexusIQ, your Zero-Hallucination Compliance Intelligence assistant. Ask me any question about your uploaded compliance assets, policies, or regulatory standards.",
-        "hello": "Hello! I am NexusIQ, your Zero-Hallucination Compliance Intelligence assistant. Ask me any question about your uploaded compliance assets, policies, or regulatory standards.",
-        "hey": "Hello! I am NexusIQ, your Zero-Hallucination Compliance Intelligence assistant. Ask me any question about your uploaded compliance assets, policies, or regulatory standards.",
-        "who are you": "I am NexusIQ — an edge-to-cloud Multi-Modal Knowledge Graph AI platform designed for enterprise compliance and zero-hallucination document querying.",
-        "what is nexusiq": "NexusIQ is an enterprise compliance platform that ingests multi-modal documents (PDF, Audio, Text), constructs a live Knowledge Graph, and uses Graph RAG for zero-hallucination queries.",
-        "gen ai": "NexusIQ is an advanced Gen AI compliance intelligence engine. Ask me any question about your uploaded compliance documents, policies, or hackathon problem statements.",
-        "help": "You can ask questions about your compliance documents (e.g. 'What is the submission deadline?', 'What problem statements are in the domain?'). I cite exact source nodes from your graph.",
-        "what can you do": "I extract entity-relationship knowledge graphs from compliance PDFs, audio logs, and text streams, and answer compliance queries with verified source citations."
+        "hi": "Hi, I'm NexusIQ. Ask me about your uploaded documents.",
+        "hello": "Hello! Ask me about your uploaded documents.",
+        "hey": "Hey! How can I help with your documents?",
+        "who are you": "I'm NexusIQ, a compliance knowledge graph assistant.",
+        "what is nexusiq": "I'm a tool that builds knowledge graphs from your docs and lets you query them.",
+        "gen ai": "I'm an AI assistant. Upload some docs and ask me about them.",
+        "help": "Upload documents (PDF/Audio/Text) and ask questions. I'll cite my sources.",
+        "what can you do": "I extract knowledge graphs from documents and answer questions based on them."
     }
 
     if q_norm in greetings:
@@ -286,7 +273,7 @@ def transcribe_audio(audio_bytes: bytes, filename: str) -> dict:
                     return {
                         "success": True,
                         "transcript": data.get("transcript", ""),
-                        "entities": data.get("compliance_entities", [])
+                        "entities": data.get("entities", [])
                     }
                 except Exception as e:
                     print(f"[Gemini Audio Failed - {model_name}]: {e}")

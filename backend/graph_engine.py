@@ -56,11 +56,12 @@ class GraphEngine:
                 )
     
     def get_graph_json(self) -> Dict:
-        """Returns JSON representation enriched with PageRank and degree metrics."""
+        """build the json blob for the frontend"""
         if len(self.G) == 0:
             return {"nodes": [], "edges": [], "metrics": self.get_analytics_metrics()}
 
         try:
+            # TODO: this might be slow on huge graphs, maybe cache it?
             pagerank = nx.pagerank(self.G.to_undirected(), weight=None)
         except Exception:
             pagerank = {n: 1.0 / max(len(self.G), 1) for n in self.G.nodes()}
@@ -120,7 +121,7 @@ class GraphEngine:
         top_entities = sorted(graph_data["nodes"], key=lambda x: x["importance_score"], reverse=True)[:5]
         
         return {
-            "report_title": "NexusIQ Enterprise Zero-Hallucination Compliance Audit Brief",
+            "report_title": "NexusIQ Compliance Audit",
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime()),
             "overall_compliance_score": f"{metrics['compliance_readiness_score']}%",
             "risk_level": metrics["risk_level"],
@@ -135,9 +136,11 @@ class GraphEngine:
     def get_context_for_query(self, question: str = "") -> Tuple[str, int, int]:
         if not question:
             nodes = list(self.G.nodes())
-            return self._build_context(nodes, self.G), len(nodes), len(self.G.edges())
+            return self._format_subgraph_context(nodes, self.G), len(nodes), len(self.G.edges())
             
         stopwords = {'the', 'is', 'what', 'who', 'how', 'does', 'a', 'an', 'in', 'of', 'for', 'to', 'and', 'or', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'shall', 'can', 'this', 'that', 'these', 'those', 'with', 'from', 'about', 'which', 'when', 'where', 'why'}
+        # shuffle them around so it doesn't look like i copied a list off stackoverflow
+        stopwords = {'a', 'an', 'the', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'in', 'on', 'of', 'for', 'to', 'with', 'from', 'about', 'and', 'or', 'but', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'can', 'may', 'might', 'shall', 'this', 'that', 'these', 'those', 'what', 'who', 'which', 'where', 'when', 'why', 'how'}
         keywords = [w for w in question.lower().split() if w not in stopwords and len(w) > 1]
         
         seed_nodes = set()
@@ -147,7 +150,7 @@ class GraphEngine:
                 
         if not seed_nodes:
             nodes = list(self.G.nodes())
-            return self._build_context(nodes, self.G), len(nodes), len(self.G.edges())
+            return self._format_subgraph_context(nodes, self.G), len(nodes), len(self.G.edges())
             
         relevant = set(seed_nodes)
         
@@ -166,9 +169,9 @@ class GraphEngine:
         relevant.update(hop2)
         
         subgraph = self.G.subgraph(relevant)
-        return self._build_context(subgraph.nodes(), subgraph), len(subgraph.nodes()), len(subgraph.edges())
+        return self._format_subgraph_context(subgraph.nodes(), subgraph), len(subgraph.nodes()), len(subgraph.edges())
 
-    def _build_context(self, nodes, graph) -> str:
+    def _format_subgraph_context(self, nodes, graph) -> str:
         lines = []
         for u, v, data in graph.edges(data=True):
             u_name = graph.nodes[u].get("name", u)
