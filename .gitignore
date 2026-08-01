@@ -14,6 +14,11 @@ backend/.env
 frontend/.env
 frontend/.env.*
 
+# Internal documents
+PRD.MD
+prd.md
+*.prd
+
 # Build outputs
 frontend/dist/
 .vercel/
