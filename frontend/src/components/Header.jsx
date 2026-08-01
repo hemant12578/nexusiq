@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react"
-import { Cpu, Layers, Network, Activity, ShieldCheck, Lock, Globe, FolderKanban, LogOut } from "lucide-react"
+import { Cpu, Layers, Network, Activity, ShieldCheck, Lock, Globe, FolderKanban, LogOut, FileSpreadsheet } from "lucide-react"
+import axios from "axios"
 
 function AnimatedNumber({ value, className }) {
   const [display, setDisplay] = useState(value)
@@ -25,9 +26,49 @@ function AnimatedNumber({ value, className }) {
   )
 }
 
-export default function Header({ stats, currentPage, onNavigate, user, onLogout }) {
+export default function Header({ stats, currentPage, onNavigate, user, onLogout, API }) {
   const [mounted, setMounted] = useState(false)
+  const [downloadingReport, setDownloadingReport] = useState(false)
+
   useEffect(() => { setMounted(true) }, [])
+
+  const handleExportAuditReport = async () => {
+    setDownloadingReport(true)
+    try {
+      const apiEndpoint = API || import.meta.env.VITE_API_URL || "https://nexusiq-backend-production.up.railway.app"
+      const res = await axios.get(`${apiEndpoint}/export-report`)
+      const reportData = res.data
+
+      const markdownContent = `# ${reportData.report_title}
+Generated: ${reportData.timestamp}
+Overall Compliance Readiness Score: ${reportData.overall_compliance_score} (${reportData.risk_level} Risk)
+
+## Executive Summary
+- Total Entities Mapped: ${reportData.total_entities}
+- Total Relationships Tracked: ${reportData.total_relationships}
+- Source Documents Indexed: ${reportData.documents_indexed.join(', ') || 'None'}
+- Regulatory Frameworks Verified: ${reportData.framework_coverage.join(', ')}
+
+## Top Critical Compliance Entities
+${reportData.top_critical_entities.map((e, idx) => `${idx + 1}. **${e.name}** (${e.type}) — Connections: ${e.connections}, Centrality Score: ${e.importance_score}`).join('\n') || 'No entities mapped yet.'}
+
+## Zero-Hallucination Audit Verdict
+${reportData.audit_verdict}
+`
+
+      const blob = new Blob([markdownContent], { type: 'text/markdown;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `NexusIQ_Compliance_Audit_Brief_${Date.now()}.md`)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    } catch (e) {
+      alert("Error generating audit report: " + e.message)
+    }
+    setDownloadingReport(false)
+  }
 
   return (
     <header className={`border-b border-purple-900/30 px-6 py-3.5 flex items-center justify-between bg-nexus-900/95 backdrop-blur-2xl z-30 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
@@ -98,6 +139,17 @@ export default function Header({ stats, currentPage, onNavigate, user, onLogout 
                 </div>
               </div>
             ))}
+
+            {/* Export Audit Report Button */}
+            <button
+              onClick={handleExportAuditReport}
+              disabled={downloadingReport}
+              className="px-3 py-1.5 rounded-xl bg-purple-950/60 hover:bg-purple-900/80 border border-purple-700/40 text-purple-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md shadow-purple-900/20 hover-lift"
+              title="Download official compliance audit report"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5 text-purple-400" />
+              <span>{downloadingReport ? "Generating..." : "Export Audit Brief"}</span>
+            </button>
 
             {/* Hallucination Badge */}
             <div className="flex items-center gap-2 pl-4 border-l border-purple-900/30">
