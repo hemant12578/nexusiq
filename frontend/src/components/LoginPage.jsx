@@ -16,7 +16,7 @@ export default function LoginPage({ onLoginSuccess, onNavigate }) {
     setFirebaseStatus("")
 
     try {
-      // Attempt Firebase auth (if email/pass exists in Firebase Auth)
+      // Attempt Firebase auth (if user credentials exist)
       await signInWithEmailAndPassword(auth, email, password)
       setFirebaseStatus("Firebase Auth Verified")
     } catch (err) {
@@ -28,7 +28,7 @@ export default function LoginPage({ onLoginSuccess, onNavigate }) {
       setScanning(false)
       setAuthed(true)
       setTimeout(() => {
-        onLoginSuccess({ email, role, firebaseProject: "nexusiq-3e622" })
+        onLoginSuccess({ email, role })
         onNavigate("app")
       }, 700)
     }, 1000)
@@ -51,7 +51,7 @@ export default function LoginPage({ onLoginSuccess, onNavigate }) {
           <h1 className="text-2xl font-bold tracking-tight gradient-text">NexusIQ Portal</h1>
           <p className="text-xs text-gray-400 font-light">Zero-Hallucination Enterprise Security Gateway</p>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-950/40 border border-amber-500/30 text-amber-300 text-[10px] font-mono font-medium">
-            <span>Firebase Connected: nexusiq-3e622</span>
+            <span>Enterprise Encrypted Session</span>
           </div>
         </div>
 
@@ -65,8 +65,8 @@ export default function LoginPage({ onLoginSuccess, onNavigate }) {
                 <div className="absolute inset-0 border-2 border-purple-400 rounded-full animate-ping opacity-40" />
               </div>
               <div className="text-xs text-purple-300 font-semibold uppercase tracking-widest animate-pulse text-center">
-                <div>Connecting Firebase Security Gateway...</div>
-                <div className="text-[10px] text-purple-400/80 font-mono mt-1 font-normal">Project ID: nexusiq-3e622</div>
+                <div>Connecting Security Gateway...</div>
+                <div className="text-[10px] text-purple-400/80 font-mono mt-1 font-normal">Authenticating Enterprise Token...</div>
               </div>
             </div>
           )}
@@ -162,7 +162,7 @@ export default function LoginPage({ onLoginSuccess, onNavigate }) {
           {/* Compliance Assurance Note */}
           <div className="pt-2 text-center border-t border-purple-900/20 text-[11px] text-gray-500 font-light flex items-center justify-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Firebase Encrypted Portal (`nexusiq-3e622`)</span>
+            <span>Encrypted Enterprise Gateway</span>
           </div>
         </div>
 

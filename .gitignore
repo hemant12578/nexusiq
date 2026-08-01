@@ -6,11 +6,13 @@ venv/
 __pycache__/
 *.pyc
 
-# Environment variables
+# Environment variables & secrets
 .env
+.env.*
+*.env
 backend/.env
-frontend/.env.local
-frontend/.env.production.local
+frontend/.env
+frontend/.env.*
 
 # Build outputs
 frontend/dist/
