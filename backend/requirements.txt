@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+google-generativeai
+pymupdf
+networkx
+python-multipart
+aiofiles
+python-dotenv
+requests
+gunicorn
