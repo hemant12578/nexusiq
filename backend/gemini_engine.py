@@ -62,8 +62,9 @@ Format:
 }
 
 Rules:
-- Every entity must have a unique id (use e1, e2, e3 format)
+- Use DESCRIPTIVE IDs like john_doe instead of e1, e2, e3. Use snake_case of the entity name as the ID (e.g., 'john_doe', 'iso_27001_policy')
 - Extract minimum 5 entities if document has enough content
+- For relationships, if a table or structured data is detected, extract each row as a separate entity
 - Relationships must reference valid entity ids only
 - Be precise and compliance-focused
 
@@ -108,6 +109,13 @@ Return ONLY valid JSON:
   "severity": "low|medium|high|critical"
 }
 """
+
+hallucination_stats = {'total_queries': 0, 'grounded': 0, 'refused': 0, 'unverified': 0}
+
+def get_hallucination_stats() -> dict:
+    stats = hallucination_stats.copy()
+    stats['hallucination_rate'] = stats['unverified'] / max(stats['total_queries'], 1) * 100
+    return stats
 
 def call_openrouter_free(prompt: str) -> str:
     """Call OpenRouter using free models with fallback across all free endpoints."""
@@ -184,7 +192,7 @@ def extract_entities(text: str, filename: str) -> dict:
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-def answer_query(question: str, context: str) -> dict:
+def answer_query(question: str, context: str, graph_node_count: int = 0, graph_edge_count: int = 0) -> dict:
     # 1. Direct Python handler for Greetings & Common FAQ phrases
     q_norm = question.strip().lower().rstrip("?!.")
     greetings = {
@@ -240,14 +248,24 @@ def answer_query(question: str, context: str) -> dict:
 
         final_answer = re.sub(r"^ANSWER:\s*", "", final_answer, flags=re.IGNORECASE).strip()
             
+        hallucination_stats['total_queries'] += 1
+        if "not available in the current" in final_answer.lower():
+            hallucination_stats['refused'] += 1
+        elif len(sources) > 0:
+            hallucination_stats['grounded'] += 1
+        else:
+            hallucination_stats['unverified'] += 1
+            
         return {
             "answer": final_answer,
-            "sources": sources
+            "sources": sources,
+            "confidence_score": 0.0
         }
     except Exception as e:
         return {
             "answer": f"Query error: {str(e)}",
-            "sources": []
+            "sources": [],
+            "confidence_score": 0.0
         }
 
 def transcribe_audio(audio_bytes: bytes, filename: str) -> dict:

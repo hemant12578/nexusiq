@@ -8,3 +8,4 @@ aiofiles
 python-dotenv
 requests
 gunicorn
+slowapi

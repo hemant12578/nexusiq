@@ -1,23 +1,39 @@
 import networkx as nx
-from typing import List, Dict
+from typing import List, Dict, Tuple
 import time
+import json
+import os
 
 class GraphEngine:
     def __init__(self):
         self.G = nx.DiGraph()
         self.documents = set()
         self.ingestion_history = []
+        self.id_map = {}
     
     def add_entities(self, entities: List[Dict], source: str):
         self.documents.add(source)
         for entity in entities:
-            self.G.add_node(
-                entity["id"],
-                name=entity.get("name", entity["id"]),
-                type=entity.get("type", "unknown"),
-                source=source,
-                timestamp=time.time()
-            )
+            orig_id = entity["id"]
+            name = entity.get("name", orig_id)
+            ent_type = entity.get("type", "unknown")
+            canonical_id = f"{name.lower().strip()}::{ent_type.lower()}"
+            
+            self.id_map[orig_id] = canonical_id
+            
+            if canonical_id in self.G:
+                if "sources" not in self.G.nodes[canonical_id]:
+                    self.G.nodes[canonical_id]["sources"] = {self.G.nodes[canonical_id].get("source", source)}
+                self.G.nodes[canonical_id]["sources"].add(source)
+            else:
+                self.G.add_node(
+                    canonical_id,
+                    name=name,
+                    type=ent_type,
+                    source=source,
+                    sources={source},
+                    timestamp=time.time()
+                )
         self.ingestion_history.append({
             "type": "entities",
             "count": len(entities),
@@ -27,10 +43,14 @@ class GraphEngine:
     
     def add_relationships(self, relationships: List[Dict], source: str):
         for rel in relationships:
-            if rel["from"] in self.G and rel["to"] in self.G:
+            u_orig = rel["from"]
+            v_orig = rel["to"]
+            u = self.id_map.get(u_orig, u_orig)
+            v = self.id_map.get(v_orig, v_orig)
+            if u in self.G and v in self.G:
                 self.G.add_edge(
-                    rel["from"],
-                    rel["to"],
+                    u,
+                    v,
                     relation=rel.get("relation", "related to"),
                     source=source
                 )
@@ -40,7 +60,6 @@ class GraphEngine:
         if len(self.G) == 0:
             return {"nodes": [], "edges": [], "metrics": self.get_analytics_metrics()}
 
-        # Compute centrality & PageRank for advanced visualization
         try:
             pagerank = nx.pagerank(self.G.to_undirected(), weight=None)
         except Exception:
@@ -77,13 +96,10 @@ class GraphEngine:
         }
 
     def get_analytics_metrics(self) -> Dict:
-        """Calculates advanced compliance health index and graph metrics."""
         num_nodes = len(self.G)
         num_edges = len(self.G.edges)
         isolated = len(list(nx.isolates(self.G))) if num_nodes > 0 else 0
         
-        # Compliance Risk Index Calculation (0 - 100%, lower risk is better)
-        # Higher density & fewer isolated nodes = higher compliance score
         density = nx.density(self.G) if num_nodes > 1 else 0.0
         compliance_score = round(min(100.0, (1.0 - (isolated / max(num_nodes, 1))) * 85 + (density * 15) + (num_nodes * 0.5)), 1) if num_nodes > 0 else 100.0
 
@@ -97,8 +113,7 @@ class GraphEngine:
             "risk_level": "LOW" if compliance_score >= 80 else ("MEDIUM" if compliance_score >= 50 else "HIGH")
         }
 
-    def generate_audit_report() -> Dict:
-        """Generates comprehensive enterprise compliance audit report."""
+    def generate_audit_report(self) -> Dict:
         metrics = self.get_analytics_metrics()
         graph_data = self.get_graph_json()
         
@@ -117,28 +132,132 @@ class GraphEngine:
             "audit_verdict": "COMPLIANT - All entity relationships verified with zero hallucination citations."
         }
 
-    def get_context_for_query() -> str:
-        context_lines = []
-        for u, v, data in self.G.edges(data=True):
-            u_name = self.G.nodes[u].get("name", u)
-            v_name = self.G.nodes[v].get("name", v)
-            relation = data.get("relation", "related to")
-            source = data.get("source", "unknown")
-            context_lines.append(
-                f"{u_name} {relation} {v_name} [Source: {source}]"
-            )
+    def get_context_for_query(self, question: str = "") -> Tuple[str, int, int]:
+        if not question:
+            nodes = list(self.G.nodes())
+            return self._build_context(nodes, self.G), len(nodes), len(self.G.edges())
+            
+        stopwords = {'the', 'is', 'what', 'who', 'how', 'does', 'a', 'an', 'in', 'of', 'for', 'to', 'and', 'or', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'shall', 'can', 'this', 'that', 'these', 'those', 'with', 'from', 'about', 'which', 'when', 'where', 'why'}
+        keywords = [w for w in question.lower().split() if w not in stopwords and len(w) > 1]
         
+        seed_nodes = set()
         for node_id, data in self.G.nodes(data=True):
-            if self.G.degree(node_id) == 0:
-                context_lines.append(
-                    f"{data.get('name', node_id)} is a "
-                    f"{data.get('type', 'entity')} "
-                    f"[Source: {data.get('source', 'unknown')}]"
-                )
+            if any(k in data.get("name", "").lower() for k in keywords):
+                seed_nodes.add(node_id)
+                
+        if not seed_nodes:
+            nodes = list(self.G.nodes())
+            return self._build_context(nodes, self.G), len(nodes), len(self.G.edges())
+            
+        relevant = set(seed_nodes)
         
-        return "\n".join(context_lines)
+        # 1-hop
+        hop1 = set()
+        for n in seed_nodes:
+            hop1.update(self.G.predecessors(n))
+            hop1.update(self.G.successors(n))
+        relevant.update(hop1)
+        
+        # 2-hop
+        hop2 = set()
+        for n in hop1:
+            hop2.update(self.G.predecessors(n))
+            hop2.update(self.G.successors(n))
+        relevant.update(hop2)
+        
+        subgraph = self.G.subgraph(relevant)
+        return self._build_context(subgraph.nodes(), subgraph), len(subgraph.nodes()), len(subgraph.edges())
+
+    def _build_context(self, nodes, graph) -> str:
+        lines = []
+        for u, v, data in graph.edges(data=True):
+            u_name = graph.nodes[u].get("name", u)
+            v_name = graph.nodes[v].get("name", v)
+            rel = data.get("relation", "related to")
+            src = data.get("source", "unknown")
+            lines.append(f"{u_name} {rel} {v_name} [Source: {src}]")
+            
+        for node_id in nodes:
+            if graph.degree(node_id) == 0:
+                d = graph.nodes[node_id]
+                lines.append(f"{d.get('name', node_id)} is a {d.get('type', 'entity')} [Source: {d.get('source', 'unknown')}]")
+        return "\n".join(lines)
+
+    def get_path_between(self, entity_a_name: str, entity_b_name: str) -> list:
+        id_a = id_b = None
+        a_lower = entity_a_name.lower()
+        b_lower = entity_b_name.lower()
+        for node_id, data in self.G.nodes(data=True):
+            name = data.get("name", "").lower()
+            if a_lower in name: id_a = node_id
+            if b_lower in name: id_b = node_id
+            if id_a and id_b: break
+            
+        if not id_a or not id_b:
+            return []
+            
+        try:
+            path = nx.shortest_path(self.G.to_undirected(), id_a, id_b)
+            return [self.G.nodes[n].get("name", n) for n in path]
+        except nx.NetworkXNoPath:
+            return []
+
+    def calculate_confidence(self, question: str, relevant_nodes: int, relevant_edges: int) -> float:
+        if relevant_nodes == 0:
+            return 0.0
+        n_score = min(relevant_nodes / 15.0, 1.0) * 40.0
+        e_score = min(relevant_edges / max(relevant_nodes, 1), 2.0) / 2.0 * 40.0
+        density = relevant_edges / (relevant_nodes * (relevant_nodes - 1)) if relevant_nodes > 1 else 0.0
+        d_score = min(density * 10, 1.0) * 20.0
+        return round(n_score + e_score + d_score, 2)
+
+    def detect_contradictions(self) -> list:
+        contradictions = []
+        edge_data = {}
+        for u, v, data in self.G.edges(data=True):
+            pair = (u, v)
+            if pair not in edge_data: edge_data[pair] = []
+            edge_data[pair].append((data.get("relation", ""), data.get("source", "")))
+            
+        for (u, v), rels in edge_data.items():
+            if len(rels) > 1 and len(set(r[0].lower() for r in rels)) > 1:
+                contradictions.append({
+                    "from": self.G.nodes[u].get("name", u),
+                    "to": self.G.nodes[v].get("name", v),
+                    "relationships": [{"relation": r[0], "source": r[1]} for r in rels]
+                })
+        return contradictions
+
+    def get_recent_changes(self, hours: int = 24) -> list:
+        cutoff = time.time() - (hours * 3600)
+        return [{
+            "id": n,
+            "name": d.get("name", n),
+            "type": d.get("type", ""),
+            "timestamp": d.get("timestamp", 0)
+        } for n, d in self.G.nodes(data=True) if d.get("timestamp", 0) >= cutoff]
+
+    def save_to_file(self, path: str = 'nexusiq_graph.json'):
+        data = nx.node_link_data(self.G)
+        for n in data.get('nodes', []):
+            if 'sources' in n and isinstance(n['sources'], set):
+                n['sources'] = list(n['sources'])
+        with open(path, 'w') as f:
+            json.dump({"graph": data, "documents": list(self.documents), "ingestion_history": self.ingestion_history, "id_map": self.id_map}, f)
+
+    def load_from_file(self, path: str = 'nexusiq_graph.json'):
+        if not os.path.exists(path): return
+        with open(path, 'r') as f: data = json.load(f)
+        for n in data.get("graph", {}).get("nodes", []):
+            if 'sources' in n and isinstance(n['sources'], list):
+                n['sources'] = set(n['sources'])
+        self.G = nx.node_link_graph(data.get("graph", {}))
+        self.documents = set(data.get("documents", []))
+        self.ingestion_history = data.get("ingestion_history", [])
+        self.id_map = data.get("id_map", {})
     
     def clear(self):
         self.G.clear()
         self.documents.clear()
         self.ingestion_history.clear()
+        self.id_map.clear()

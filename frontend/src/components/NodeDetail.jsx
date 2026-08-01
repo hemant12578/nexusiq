@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { User, FileText, ShieldAlert, Calendar, Building2, Bookmark, MapPin, HelpCircle, X, Layers, Link2 } from "lucide-react"
+import { User, FileText, ShieldAlert, Calendar, Building2, Bookmark, MapPin, HelpCircle, X, Layers, Link2, Sparkles } from "lucide-react"
 
 const NODE_COLORS = {
   person: "#00ff88",
@@ -86,7 +86,16 @@ export default function NodeDetail({ node, onClose }) {
               <span className="text-[10px] text-gray-500 uppercase tracking-wider flex items-center gap-1">
                 <FileText className="w-3 h-3 text-purple-400" /> Source
               </span>
-              <span className="text-gray-300 font-medium truncate ml-3 max-w-[170px]">{node.source || "Unknown"}</span>
+              <span className="text-gray-300 font-medium truncate ml-3 max-w-[170px]" title={Array.isArray(node.sources) ? node.sources.join(", ") : (node.source || "Unknown")}>
+                {Array.isArray(node.sources) ? node.sources.join(", ") : (node.source || "Unknown")}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between py-2 border-t border-purple-900/15">
+              <span className="text-[10px] text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-purple-400" /> Importance
+              </span>
+              <span className="text-cyan-400 font-bold font-mono">{node.importance_score || 0}%</span>
             </div>
 
             <div className="flex items-center justify-between py-2 border-t border-purple-900/15">

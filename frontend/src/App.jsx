@@ -51,11 +51,6 @@ export default function App() {
   useEffect(() => {
     fetchGraph()
     fetchStats()
-    const interval = setInterval(() => {
-      fetchGraph()
-      fetchStats()
-    }, 3000)
-    return () => clearInterval(interval)
   }, [])
 
   const handleUploadSuccess = () => {
@@ -82,6 +77,7 @@ export default function App() {
         onNavigate={setCurrentPage}
         user={user}
         onLogout={handleLogout}
+        API={API}
       />
 
       {/* Dynamic Page Rendering */}
@@ -171,7 +167,7 @@ export default function App() {
 
             {/* Right Compliance Query Panel */}
             <div className="w-96 border-l border-purple-900/20 overflow-y-auto glass-strong">
-              <QueryInterface API={API} onQuery={fetchStats} />
+              <QueryInterface API={API} onQuery={() => { fetchGraph(); fetchStats(); }} />
             </div>
           </div>
         </div>

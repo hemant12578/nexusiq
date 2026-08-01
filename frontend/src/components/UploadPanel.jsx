@@ -28,6 +28,7 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading }) {
         name: file.name,
         entities: res.data.entities_found,
         relationships: res.data.relationships_found,
+        truncated: res.data.truncated,
         type: "pdf",
         ts: Date.now()
       }])
@@ -38,6 +39,21 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading }) {
     }
     setLoading(false)
     setUploading(false)
+  }
+
+  const processFiles = async (files) => {
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.type !== "application/pdf") {
+        alert("Only PDF files are accepted");
+        continue;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`File ${file.name} is too large (> 10MB). Refusing to upload.`);
+        continue;
+      }
+      await uploadPDF(file);
+    }
   }
 
   const startRecording = async () => {
@@ -137,9 +153,7 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading }) {
         onDrop={e => {
           e.preventDefault()
           setDragOver(false)
-          const file = e.dataTransfer.files[0]
-          if (file?.type === "application/pdf") uploadPDF(file)
-          else alert("Only PDF files are accepted")
+          processFiles(e.dataTransfer.files)
         }}
         onClick={() => document.getElementById("pdfInput").click()}
       >
@@ -154,8 +168,9 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading }) {
           id="pdfInput"
           type="file"
           accept=".pdf"
+          multiple
           className="hidden"
-          onChange={e => e.target.files[0] && uploadPDF(e.target.files[0])}
+          onChange={e => processFiles(e.target.files)}
         />
       </div>
 
@@ -224,6 +239,7 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading }) {
                   <span className="text-gray-600">•</span>
                   <span className="px-1.5 py-0.5 bg-purple-900/40 rounded-md">{u.relationships || 0} links</span>
                 </div>
+                {u.truncated && <div className="text-amber-400 text-[9px] mt-1 ml-6">⚠ Document truncated (large file)</div>}
               </div>
             )
           })}

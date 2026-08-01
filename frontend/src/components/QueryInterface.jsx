@@ -50,6 +50,7 @@ export default function QueryInterface({ API, onQuery }) {
         question,
         answer: cleanText || rawAnswer,
         sources: res.data.sources || [],
+        confidence: res.data.confidence_score,
         time: res.data.response_time_ms,
         nodes: res.data.nodes_searched,
         ts: Date.now()
@@ -128,6 +129,11 @@ export default function QueryInterface({ API, onQuery }) {
                 <Clock className="w-3 h-3" /> {answer.time}ms
               </span>
             )}
+            {answer.confidence !== undefined && (
+              <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-medium bg-amber-900/40 text-amber-300 flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3" /> {answer.confidence}% confidence
+              </span>
+            )}
             <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-medium bg-emerald-900/40 text-emerald-300 ml-auto flex items-center gap-1">
               <ShieldCheck className="w-3 h-3" /> Grounded
             </span>
@@ -148,10 +154,10 @@ export default function QueryInterface({ API, onQuery }) {
               {answer.sources.map((s, i) => (
                 <div
                   key={i}
-                  className="text-[11px] text-gray-400 flex items-start gap-1.5 mb-1.5 animate-slide-up hover:text-gray-200 transition-colors"
+                  className="text-[11px] text-gray-400 flex items-start gap-1.5 mb-1.5 animate-slide-up hover:text-gray-200 transition-colors cursor-pointer hover:bg-nexus-800/80 p-1 rounded group"
                   style={{ animationDelay: `${(i + 1) * 80}ms` }}
                 >
-                  <CornerDownRight className="w-3 h-3 text-purple-400 mt-0.5 shrink-0" />
+                  <Search className="w-3 h-3 text-purple-400 mt-0.5 shrink-0 group-hover:text-cyan-400 transition-colors" />
                   <span>{s}</span>
                 </div>
               ))}

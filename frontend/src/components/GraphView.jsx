@@ -16,8 +16,13 @@ export default function GraphView({ graphData, onNodeClick }) {
   const svgRef = useRef(null)
   const simulationRef = useRef(null)
 
+  const lastCountRef = useRef({ nodes: 0, edges: 0 })
+
   useEffect(() => {
     if (!svgRef.current) return
+    const newCount = { nodes: graphData.nodes.length, edges: graphData.edges.length }
+    if (newCount.nodes === lastCountRef.current.nodes && newCount.edges === lastCountRef.current.edges) return
+    lastCountRef.current = newCount
 
     if (simulationRef.current) {
       simulationRef.current.stop()

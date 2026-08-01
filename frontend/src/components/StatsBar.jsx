@@ -13,6 +13,8 @@ export default function StatsBar({ stats }) {
     { icon: Database, text: `${stats.total_nodes} entities tracked` },
     { icon: Layers, text: `${stats.total_edges} relationships mapped` },
     { icon: FolderCheck, text: `${stats.documents_processed} documents processed` },
+    { icon: Activity, text: `${stats.total_queries || 0} queries served` },
+    { icon: ShieldCheck, text: `${stats.hallucination_rate?.toFixed(1) || '0.0'}% hallucination rate` },
   ]
 
   return (
