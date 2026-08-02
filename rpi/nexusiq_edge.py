@@ -2,7 +2,6 @@
 """
 NexusIQ Edge Agent — Raspberry Pi
 Sends live compliance incidents to NexusIQ backend
-Team Nexus — Hemant & Shubham
 """
 
 import requests

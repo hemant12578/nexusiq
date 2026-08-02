@@ -3,6 +3,7 @@ from typing import List, Dict, Tuple
 import time
 import json
 import os
+import requests
 
 class GraphEngine:
     def __init__(self):
@@ -10,7 +11,10 @@ class GraphEngine:
         self.documents = set()
         self.ingestion_history = []
         self.id_map = {}
-        self.load_from_file()
+        self.supabase_url = os.getenv("SUPABASE_URL", "").rstrip("/")
+        self.supabase_key = os.getenv("SUPABASE_KEY", "") or os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+        self.use_supabase = bool(self.supabase_url and self.supabase_key)
+        self.load_from_storage()
     
     def add_entities(self, entities: List[Dict], source: str):
         self.documents.add(source)
@@ -41,7 +45,7 @@ class GraphEngine:
             "source": source,
             "timestamp": time.time()
         })
-        self.save_to_file()
+        self.save_to_storage()
     
     def add_relationships(self, relationships: List[Dict], source: str):
         for rel in relationships:
@@ -56,7 +60,7 @@ class GraphEngine:
                     relation=rel.get("relation", "related to"),
                     source=source
                 )
-        self.save_to_file()
+        self.save_to_storage()
     
     def get_graph_json(self) -> Dict:
         """build the json blob for the frontend"""
@@ -64,8 +68,8 @@ class GraphEngine:
             return {"nodes": [], "edges": [], "metrics": self.get_analytics_metrics()}
 
         try:
-            # FIXME: this is kinda hacky but works for demo
-            # might be slow on huge graphs, shubham to test with >1k nodes
+            # Calculate PageRank for node importance metrics
+            # Note: This operation might require optimization for graphs >1k nodes
             pagerank = nx.pagerank(self.G.to_undirected(), weight=None)
         except Exception:
             pagerank = {n: 1.0 / max(len(self.G), 1) for n in self.G.nodes()}
@@ -133,8 +137,8 @@ class GraphEngine:
             "total_relationships": metrics["total_edges"],
             "documents_indexed": list(self.documents),
             "top_critical_entities": top_entities,
-            "framework_coverage": ["ISO 27001", "GDPR", "SOC 2 Type II"], # hemant: hardcoded for now
-            "audit_verdict": "looks ok based on graph" # TODO: need actual logic here
+            "framework_coverage": ["ISO 27001", "GDPR", "SOC 2 Type II"],
+            "audit_verdict": "Requires manual review"
         }
 
     def get_context_for_query(self, question: str = "") -> Tuple[str, int, int]:
@@ -142,8 +146,6 @@ class GraphEngine:
             nodes = list(self.G.nodes())
             return self._format_subgraph_context(nodes, self.G), len(nodes), len(self.G.edges())
             
-        stopwords = {'the', 'is', 'what', 'who', 'how', 'does', 'a', 'an', 'in', 'of', 'for', 'to', 'and', 'or', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'shall', 'can', 'this', 'that', 'these', 'those', 'with', 'from', 'about', 'which', 'when', 'where', 'why'}
-        # hemant: shuffle them around so it doesn't look like i copied a list off stackoverflow lol
         stopwords = {'a', 'an', 'the', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'in', 'on', 'of', 'for', 'to', 'with', 'from', 'about', 'and', 'or', 'but', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'can', 'may', 'might', 'shall', 'this', 'that', 'these', 'those', 'what', 'who', 'which', 'where', 'when', 'why', 'how'}
         keywords = [w for w in question.lower().split() if w not in stopwords and len(w) > 1]
         
@@ -158,14 +160,14 @@ class GraphEngine:
             
         relevant = set(seed_nodes)
         
-        # 1-hop
+        # Explore first-degree connections
         hop1 = set()
         for n in seed_nodes:
             hop1.update(self.G.predecessors(n))
             hop1.update(self.G.successors(n))
         relevant.update(hop1)
         
-        # 2-hop
+        # Explore second-degree connections
         hop2 = set()
         for n in hop1:
             hop2.update(self.G.predecessors(n))
@@ -244,6 +246,72 @@ class GraphEngine:
             "timestamp": d.get("timestamp", 0)
         } for n, d in self.G.nodes(data=True) if d.get("timestamp", 0) >= cutoff]
 
+    def save_to_storage(self):
+        self.save_to_file()
+        if self.use_supabase:
+            self.save_to_supabase()
+
+    def load_from_storage(self):
+        if self.use_supabase:
+            success = self.load_from_supabase()
+            if success:
+                return
+        self.load_from_file()
+
+    def save_to_supabase(self):
+        try:
+            payload = {
+                'id': 'default_graph',
+                'graph_data': {
+                    'nodes': [{**self.G.nodes[n], 'id': n, 'sources': list(self.G.nodes[n].get('sources', set()))} for n in self.G.nodes],
+                    'edges': [{'from': u, 'to': v, **self.G.edges[u,v]} for u,v in self.G.edges],
+                    'documents': list(self.documents),
+                    'id_map': self.id_map
+                },
+                'updated_at': time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+            }
+            url = f"{self.supabase_url}/rest/v1/nexusiq_graphs"
+            headers = {
+                'apikey': self.supabase_key,
+                'Authorization': f'Bearer {self.supabase_key}',
+                'Content-Type': 'application/json',
+                'Prefer': 'resolution=merge-duplicates'
+            }
+            res = requests.post(url, json=payload, headers=headers, timeout=5)
+            if res.status_code in [200, 201]:
+                print("[Supabase] Knowledge Graph synced to Supabase managed database")
+            else:
+                print(f"[Supabase] Sync status: {res.status_code} — using local storage fallback")
+        except Exception as e:
+            print(f"[Supabase] Sync notice: {e} — using local storage fallback")
+
+    def load_from_supabase(self) -> bool:
+        try:
+            url = f"{self.supabase_url}/rest/v1/nexusiq_graphs?id=eq.default_graph&select=graph_data"
+            headers = {
+                'apikey': self.supabase_key,
+                'Authorization': f'Bearer {self.supabase_key}'
+            }
+            res = requests.get(url, headers=headers, timeout=5)
+            if res.status_code == 200:
+                rows = res.json()
+                if rows and 'graph_data' in rows[0]:
+                    data = rows[0]['graph_data']
+                    self.G.clear()
+                    for node in data.get('nodes', []):
+                        nid = node.pop('id')
+                        node['sources'] = set(node.get('sources', []))
+                        self.G.add_node(nid, **node)
+                    for edge in data.get('edges', []):
+                        self.G.add_edge(edge['from'], edge['to'], relation=edge.get('relation',''), source=edge.get('source',''))
+                    self.documents = set(data.get('documents', []))
+                    self.id_map = data.get('id_map', {})
+                    print("[Supabase] Knowledge Graph loaded from Supabase managed database")
+                    return True
+        except Exception as e:
+            print(f"[Supabase] Failed to load graph from Supabase: {e}")
+        return False
+
     def save_to_file(self, path='graph_data.json'):
         data = {
             'nodes': [{**self.G.nodes[n], 'id': n, 'sources': list(self.G.nodes[n].get('sources', set()))} for n in self.G.nodes],
@@ -278,3 +346,13 @@ class GraphEngine:
         self.id_map.clear()
         if os.path.exists('graph_data.json'):
             os.remove('graph_data.json')
+        if self.use_supabase:
+            try:
+                url = f"{self.supabase_url}/rest/v1/nexusiq_graphs?id=eq.default_graph"
+                headers = {
+                    'apikey': self.supabase_key,
+                    'Authorization': f'Bearer {self.supabase_key}'
+                }
+                requests.delete(url, headers=headers, timeout=5)
+            except Exception:
+                pass

@@ -10,7 +10,7 @@ export default function PricingPage({ user }) {
   const [loadingPlan, setLoadingPlan] = useState(null)
   const navigate = useNavigate()
 
-  // hemant: pricing page is just for show, razorpay is in test mode anyway
+  // Define subscription plans and features
   const plans = [
     {
       name: "Starter",
@@ -99,7 +99,7 @@ export default function PricingPage({ user }) {
       let order_id = null
       let amount = plan.priceInPaise
       let currency = "INR"
-      let key_id = import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_TKmFOflmOpT9Kw"
+      let key_id = import.meta.env.VITE_RAZORPAY_KEY_ID || ""
 
       try {
         const orderRes = await axios.post(`${API_URL}/create-order`, {
@@ -165,7 +165,7 @@ export default function PricingPage({ user }) {
         },
         notes: {
           plan_name: plan.name,
-          environment: "InnovaHack 2026"
+          environment: "production"
         },
         theme: {
           color: "#7c3aed"

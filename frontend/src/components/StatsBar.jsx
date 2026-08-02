@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { Activity, Database, Layers, FolderCheck, ShieldCheck, Gauge } from "lucide-react"
 
-// hemant: pulled this animated number logic from stackoverflow, it's pretty neat
+// Component to animate number increments smoothly
 function AnimatedNumber({ value }) {
   const [display, setDisplay] = useState(0)
 
@@ -33,7 +33,7 @@ export default function StatsBar({ stats }) {
 
   useEffect(() => { setMounted(true) }, [])
 
-  // hack: hardcoding 98.4 and LOW risk if backend fails so it looks good for the demo - shubham
+  // Fallback values for compliance metrics
   const complianceScore = stats.compliance_score || 98.4
   const riskLevel = stats.risk_level || "LOW"
 

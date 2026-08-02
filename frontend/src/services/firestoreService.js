@@ -1,7 +1,7 @@
 import { db } from '../firebase'
-import { collection, addDoc, getDocs, query, where, orderBy, limit, serverTimestamp, doc, setDoc } from 'firebase/firestore'
+import { collection, addDoc, getDocs, getDoc, query, where, orderBy, limit, serverTimestamp, doc, setDoc } from 'firebase/firestore'
 
-// save a query + answer to user's history
+// Save user query and AI response to history
 export async function saveQueryHistory(uid, questionText, answerText, sources) {
   if (!uid) return
   try {
@@ -17,7 +17,7 @@ export async function saveQueryHistory(uid, questionText, answerText, sources) {
   }
 }
 
-// get user's recent queries
+// Retrieve recent query history for user
 export async function getQueryHistory(uid, max = 20) {
   if (!uid) return []
   try {
@@ -35,7 +35,7 @@ export async function getQueryHistory(uid, max = 20) {
   }
 }
 
-// save upload record
+// Log document upload activity
 export async function saveUploadRecord(uid, filename, type, entitiesFound, relationshipsFound) {
   if (!uid) return
   try {
@@ -52,7 +52,7 @@ export async function saveUploadRecord(uid, filename, type, entitiesFound, relat
   }
 }
 
-// get user's upload history
+// Retrieve recent uploads for user
 export async function getUploadHistory(uid, max = 50) {
   if (!uid) return []
   try {
@@ -70,7 +70,7 @@ export async function getUploadHistory(uid, max = 50) {
   }
 }
 
-// save/update user profile on login
+// Update user profile data
 export async function saveUserProfile(uid, email, role) {
   if (!uid) return
   try {
@@ -84,7 +84,7 @@ export async function saveUserProfile(uid, email, role) {
   }
 }
 
-// Save subscription after successful payment
+// Record active subscription status
 export async function saveSubscription(uid, plan, paymentId, orderId) {
   if (!uid) return
   try {
@@ -94,20 +94,18 @@ export async function saveSubscription(uid, plan, paymentId, orderId) {
       orderId,
       status: 'active',
       subscribedAt: serverTimestamp(),
-      expiresAt: null // TODO: add expiry logic
+      expiresAt: null
     }, { merge: true })
   } catch (e) {
     console.error('failed to save subscription:', e)
   }
 }
 
-// Check if user has active subscription
+// Verify user subscription status
 export async function getSubscription(uid) {
   if (!uid) return null
   try {
     const snap = await getDocs(query(collection(db, 'subscriptions'), where('uid', '==', uid)))
-    // Actually use doc directly
-    const { getDoc } = await import('firebase/firestore')
     const docSnap = await getDoc(doc(db, 'subscriptions', uid))
     if (docSnap.exists()) return docSnap.data()
     return null

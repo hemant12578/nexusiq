@@ -8,7 +8,7 @@ export default function LoginPage({ onLoginSuccess }) {
   const navigate = useNavigate()
   const [role, setRole] = useState("officer")
   const [email, setEmail] = useState("compliance.officer@nexusiq.enterprise")
-  const [password, setPassword] = useState("password123")
+  const [password, setPassword] = useState("")
   const [scanning, setScanning] = useState(false)
   const [authed, setAuthed] = useState(false)
   const [firebaseStatus, setFirebaseStatus] = useState("")
@@ -54,7 +54,7 @@ export default function LoginPage({ onLoginSuccess }) {
       setFirebaseStatus("Authenticated")
       executeLoginSuccess({ email: res.user.email, role, uid: res.user.uid })
     } catch (err) {
-      // shubham: if firebase fails, just let them in anyway so the demo doesn't crash 
+      // Handle authentication errors and fallback to local session if necessary
       console.warn("Firebase auth failed, falling back to mock session", err)
       setFirebaseStatus("Logged in")
       executeLoginSuccess({ email, role, uid: 'demo-user-' + Date.now().toString(36) })

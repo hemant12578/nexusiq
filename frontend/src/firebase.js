@@ -4,7 +4,7 @@ import { getAuth, GoogleAuthProvider, signInWithEmailAndPassword, createUserWith
 import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, limit, serverTimestamp, doc, setDoc } from 'firebase/firestore'
 
 const firebaseConfig = {
-  // hemant: don't commit the real keys lol, read from env
+  // Load Firebase configuration from environment variables
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "",
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "",

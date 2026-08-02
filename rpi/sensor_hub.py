@@ -2,7 +2,6 @@
 """
 NexusIQ RPi Sensor Hub & Edge Gateway
 Integrates ESP32 DHT11 temperature/humidity data + manual triggers
-Team Nexus — Hemant & Shubham
 """
 
 import json

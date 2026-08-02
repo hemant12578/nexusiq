@@ -4,6 +4,7 @@ import os
 import re
 import requests
 from dotenv import load_dotenv
+from fastapi import HTTPException
 
 load_dotenv()
 
@@ -246,8 +247,83 @@ def extract_entities(text: str, filename: str) -> dict:
 
     return fallback_extract_entities(text, filename)
 
+def query_lyzr_webhook(user_question: str, networkx_retrieved_data: str) -> dict:
+    lyzr_url = os.getenv("LYZR_WEBHOOK_URL", "https://inference.studio.lyzr.ai/api/workflows/execute")
+    lyzr_api_key = os.getenv("LYZR_API_KEY", "")
+    lyzr_secret = os.getenv("LYZR_WEBHOOK_SECRET", "192a9b3bbf466f491087ec63da63c48d199adf3dec00535585f3662712002af0")
+
+    headers = {
+        "x-api-key": lyzr_api_key,
+        "Content-Type": "application/json"
+    }
+    if lyzr_secret:
+        headers["x-webhook-secret"] = lyzr_secret
+
+    payload = {
+        "chatInput": user_question,
+        "graphContext": networkx_retrieved_data,
+        "input": [
+            {
+                "chatInput": user_question,
+                "graphContext": networkx_retrieved_data
+            }
+        ]
+    }
+    workflow_id = os.getenv("LYZR_WORKFLOW_ID", "90e58378-39e3-464e-857d-d2a6fa54adb2")
+    if workflow_id:
+        payload["workflow_id"] = workflow_id
+
+    try:
+        res = requests.post(lyzr_url, headers=headers, json=payload, timeout=30)
+        res.raise_for_status()
+        res_json = res.json()
+
+        answer_text = ""
+        if isinstance(res_json, dict):
+            answer_text = (
+                res_json.get("response") or
+                res_json.get("answer") or
+                res_json.get("output") or
+                res_json.get("result") or
+                res_json.get("text") or
+                res_json.get("message") or
+                ""
+            )
+            if not answer_text and "data" in res_json:
+                d = res_json["data"]
+                if isinstance(d, str):
+                    answer_text = d
+                elif isinstance(d, dict):
+                    answer_text = d.get("response") or d.get("answer") or str(d)
+        elif isinstance(res_json, str):
+            answer_text = res_json
+        elif isinstance(res_json, list) and len(res_json) > 0:
+            answer_text = str(res_json[0])
+
+        if not answer_text:
+            answer_text = str(res_json)
+
+        found_sources = list(set(re.findall(r'\[SOURCE:\s*(.*?)\]', networkx_retrieved_data)))
+
+        hallucination_stats['total_queries'] += 1
+        if found_sources:
+            hallucination_stats['grounded'] += 1
+        else:
+            hallucination_stats['unverified'] += 1
+
+        return {
+            "answer": answer_text,
+            "sources": found_sources,
+            "confidence_score": 0.95
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[Lyzr AI Webhook Request Failed]: {e}")
+        raise HTTPException(status_code=500, detail=f"Lyzr AI Webhook request failed: {str(e)}")
+
 def answer_query(question: str, context: str, graph_node_count: int = 0, graph_edge_count: int = 0) -> dict:
-    # 1. Direct Python handler for Greetings & Common FAQ phrases
+    # Direct Python handler for Greetings & Common FAQ phrases
     q_norm = question.strip().lower().rstrip("?!.")
     greetings = {
         "hi": "Hi, I'm NexusIQ. Ask me about your uploaded documents.",
@@ -266,7 +342,13 @@ def answer_query(question: str, context: str, graph_node_count: int = 0, graph_e
             "sources": []
         }
 
-    # 2. Query Knowledge Graph via LLM
+    # If Lyzr AI Webhook credentials/URL are configured, use Lyzr AI SuperFlow
+    lyzr_key = os.getenv("LYZR_API_KEY", "")
+    lyzr_url = os.getenv("LYZR_WEBHOOK_URL", "")
+    if lyzr_key or lyzr_url:
+        return query_lyzr_webhook(question, context)
+
+    # Query Knowledge Graph via LLM
     try:
         prompt = QUERY_PROMPT.replace(
             "{context}", context

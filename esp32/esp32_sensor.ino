@@ -8,8 +8,8 @@
 #define RELAY_PIN 26
 #define TEMP_THRESHOLD 32.0
 
-const char* ssid = "Airtel_sanj_9764";
-const char* password = "JkHS@1215";
+const char* ssid = "YOUR_WIFI_SSID";
+const char* password = "YOUR_WIFI_PASSWORD";
 const char* rpiIP = "192.168.1.17";
 const int rpiPort = 5001;
 

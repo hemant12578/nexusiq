@@ -1,6 +1,8 @@
-# hemant: we just pass audio straight to gemini now in gemini_engine.py
-# keeping this around just in case we want to add local whisper later or something
-# shubham tested the formats, webm is best for frontend
+"""
+Audio processing utilities.
+Currently delegates to Gemini Engine for processing, but kept for potential future local Whisper integration.
+WebM is the preferred format for frontend compatibility.
+"""
 
 SUPPORTED_FORMATS = ["audio/webm", "audio/wav", "audio/mp3", "audio/ogg", "audio/mpeg"]
 

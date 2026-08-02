@@ -18,7 +18,7 @@ export default function Workspace({ API, graphData, stats, loading, setLoading, 
     setActivityRefreshKey(prev => prev + 1)
   }
 
-  // shubham: this simulates the raspberry pi sending an incident log to our backend
+  // Simulate live edge-device incident ingestion
   const sendRPiIncident = async () => {
     setRpiSending(true)
     setLoading(true)

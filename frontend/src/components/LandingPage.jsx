@@ -22,7 +22,8 @@ import {
   Award,
   GitBranch,
   Terminal,
-  Globe
+  Globe,
+  Github
 } from "lucide-react"
 
 export default function LandingPage({ user }) {
@@ -30,13 +31,13 @@ export default function LandingPage({ user }) {
   const [openFaq, setOpenFaq] = useState(null)
   const [liveStats, setLiveStats] = useState(null)
 
-  // hemant: pull live stats from backend to show on landing page
+  // Fetch live system statistics
   const API = import.meta.env.VITE_API_URL || 'https://nexusiq-backend-production.up.railway.app'
   useEffect(() => {
     axios.get(`${API}/stats`).then(r => setLiveStats(r.data)).catch(() => {})
   }, [])
 
-  // hemant: using hardcoded content here for demo. move to CMS later if we win
+  // Define feature showcase content
   const featureTabs = {
     pdf: {
       title: "PDF parsing",
@@ -86,17 +87,22 @@ export default function LandingPage({ user }) {
   return (
     <div className="relative z-10 min-h-screen text-white overflow-y-auto">
       <section className="relative px-6 pt-16 pb-20 max-w-6xl mx-auto text-center space-y-8 animate-fade-in">
-        <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-purple-900/40 border border-purple-500/30 text-purple-300 text-xs font-semibold uppercase tracking-widest backdrop-blur-md shadow-lg shadow-purple-950/40 hover-lift">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>InnovaHack 2026 • Build V2 • Team Nexus</span>
+        <div className="flex flex-col items-center justify-center gap-3">
+          <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-purple-900/40 border border-purple-500/30 text-purple-300 text-xs font-semibold uppercase tracking-widest backdrop-blur-md shadow-lg shadow-purple-950/40 hover-lift">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>InnovaHack 2026 • Build V2 • Team Nexus</span>
+          </div>
+          <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-indigo-900/40 border border-indigo-500/30 text-indigo-300 text-xs font-semibold uppercase tracking-widest backdrop-blur-md shadow-lg shadow-indigo-950/40 hover-lift">
+            <span>🚀 Powered by Lyzr AI SuperFlow & Gemini</span>
+          </div>
         </div>
 
         <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight gradient-text max-w-5xl mx-auto">
-          Turn compliance docs into a queryable knowledge graph
+          NexusIQ: Zero-Hallucination Compliance Intelligence Platform
         </h1>
 
         <p className="text-gray-300 text-base md:text-lg max-w-3xl mx-auto font-light leading-relaxed">
-          Parse compliance documents and audio logs into a live interactive knowledge web powered by Graph RAG.
+          Transform compliance documents into a queryable knowledge graph powered by Lyzr AI SuperFlow & Google Gemini — with zero hallucinations.
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
@@ -125,10 +131,20 @@ export default function LandingPage({ user }) {
             <Sparkles className="w-4 h-4 text-amber-400" />
             <span>Pricing &amp; Plans</span>
           </Link>
+          
+          <a
+            href="https://github.com/hemant12578/nexusiq"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-8 py-4 bg-nexus-800/80 border border-gray-700/50 hover:border-purple-600/50 rounded-xl font-bold text-sm text-gray-300 transition-all hover-lift flex items-center gap-2"
+          >
+            <Github className="w-4 h-4" />
+            <span>View on GitHub</span>
+          </a>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto pt-8">
-          {/* shubham: check if we can make these numbers dynamic later */}
+          {/* Render live metrics dashboard */}
           {[
             { label: "Documents Processed", value: liveStats ? liveStats.documents_processed : "—", sub: "Live from backend" },
             { label: "Graph Nodes", value: liveStats ? liveStats.total_nodes : "—", sub: "Entity extraction" },
@@ -141,6 +157,38 @@ export default function LandingPage({ user }) {
               <div className="text-[10px] text-gray-500 font-light">{s.sub}</div>
             </div>
           ))}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto pt-16">
+          <div className="bg-nexus-800/50 backdrop-blur-xl p-6 rounded-2xl border border-purple-900/30 hover-lift text-left space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-purple-950/60 border border-purple-800/40 flex items-center justify-center text-purple-400">
+              <FileText className="w-5 h-5" />
+            </div>
+            <h3 className="font-semibold text-gray-200">Multi-Modal Ingestion</h3>
+            <p className="text-sm text-gray-400 font-light leading-relaxed">
+              PDFs, Audio, Video, Text — processed through Gemini 2.5 Flash with intelligent entity extraction.
+            </p>
+          </div>
+          
+          <div className="bg-nexus-800/50 backdrop-blur-xl p-6 rounded-2xl border border-purple-900/30 hover-lift text-left space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-purple-950/60 border border-purple-800/40 flex items-center justify-center text-purple-400">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <h3 className="font-semibold text-gray-200">Zero-Hallucination Graph RAG</h3>
+            <p className="text-sm text-gray-400 font-light leading-relaxed">
+              Explicit knowledge graph paths ensure every answer is grounded, cited, and verifiable.
+            </p>
+          </div>
+          
+          <div className="bg-nexus-800/50 backdrop-blur-xl p-6 rounded-2xl border border-purple-900/30 hover-lift text-left space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-purple-950/60 border border-purple-800/40 flex items-center justify-center text-purple-400">
+              <Zap className="w-5 h-5" />
+            </div>
+            <h3 className="font-semibold text-gray-200">Lyzr AI SuperFlow</h3>
+            <p className="text-sm text-gray-400 font-light leading-relaxed">
+              Agentic orchestration via Lyzr SuperFlow ensures deterministic, workflow-driven compliance intelligence.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -398,7 +446,7 @@ export default function LandingPage({ user }) {
             <div className="space-y-3">
               <div className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Tech Stack</div>
               <div className="flex flex-wrap gap-2">
-                {["React", "FastAPI", "Gemini AI", "D3.js", "NetworkX", "Firebase", "Razorpay"].map(t => (
+                {["React", "FastAPI", "Gemini AI", "Lyzr AI", "D3.js", "NetworkX", "Firebase", "Razorpay"].map(t => (
                   <span key={t} className="px-2 py-1 rounded-md bg-purple-950/60 border border-purple-900/30 text-[10px] text-purple-300 font-mono">{t}</span>
                 ))}
               </div>

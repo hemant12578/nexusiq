@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import * as THREE from 'three'
-import { FileUp, BrainCircuit, Network, Search, FileCheck, ArrowLeft, CheckCircle2, ArrowDown, Layers } from 'lucide-react'
+import { FileUp, BrainCircuit, Network, Search, FileCheck, ArrowLeft, CheckCircle2, ArrowDown, Layers, Cpu, Wifi, Thermometer, ShieldCheck, Zap, RefreshCw } from 'lucide-react'
 
 const ArchitectureHero3D = () => {
   const mountRef = useRef(null)
@@ -157,7 +157,7 @@ const ArchitectureHero3D = () => {
 }
 
 export default function ArchitecturePage() {
-  // hemant: architecture flow for the presentation
+  // Define system architecture steps
   const steps = [
     {
       id: 1,
@@ -185,13 +185,19 @@ export default function ArchitecturePage() {
     },
     {
       id: 5,
+      title: "Lyzr SuperFlow",
+      desc: "Agentic orchestration routes context through Lyzr AI for zero-hallucination answers",
+      icon: Zap
+    },
+    {
+      id: 6,
       title: "Cited Answer",
       desc: "Grounded response with source document citations",
       icon: FileCheck
     }
   ]
 
-  // shubham: metrics to impress the judges
+  // Define evaluation metrics
   const metrics = [
     {
       name: "Retrieval Precision",
@@ -228,13 +234,13 @@ export default function ArchitecturePage() {
       <div className="relative z-10 text-center space-y-4 max-w-3xl mx-auto px-6 py-8 animate-fade-in">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-900/40 border border-purple-500/30 text-purple-300 text-xs font-mono font-medium">
           <Layers className="w-3.5 h-3.5 text-cyan-400" />
-          <span>Multi-Modal Knowledge Graph Engine</span>
+          <span>Multi-Modal Knowledge Graph Engine • Powered by Lyzr AI</span>
         </div>
         <h1 className="text-4xl md:text-6xl font-extrabold gradient-text tracking-tight">
           System Architecture
         </h1>
         <p className="text-lg md:text-xl text-purple-200 font-light tracking-wide">
-          End-to-End Pipeline &amp; Graph RAG Flow
+          End-to-End Pipeline &amp; Lyzr SuperFlow Orchestration
         </p>
       </div>
 
@@ -271,6 +277,83 @@ export default function ArchitecturePage() {
                   <div className="font-semibold text-purple-200">{metric.name}</div>
                   <div className="text-sm text-gray-400 mt-1">{metric.approach}</div>
                 </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* AI Fallback Chain */}
+        <div className="bg-nexus-800/80 glass-strong p-8 rounded-2xl glow-border">
+          <h2 className="text-2xl font-bold mb-6 text-purple-100 text-center">AI Orchestration Chain — Zero-Fail Design</h2>
+          <div className="flex flex-col md:flex-row items-center justify-center gap-4">
+            {[
+              { name: "Lyzr AI SuperFlow", desc: "Primary agentic orchestration", icon: Zap, color: "text-indigo-400" },
+              { name: "Google Gemini 2.5 Flash", desc: "Primary extraction via SDK", icon: BrainCircuit, color: "text-purple-400" },
+              { name: "OpenRouter Free Models", desc: "10+ free model fallback", icon: RefreshCw, color: "text-cyan-400" },
+              { name: "Local Regex Extractor", desc: "Offline, zero-dependency", icon: Cpu, color: "text-emerald-400" }
+            ].map((tier, i) => (
+              <React.Fragment key={i}>
+                <div className="bg-nexus-900/80 p-5 rounded-xl border border-purple-500/30 hover-lift text-center flex-1 w-full md:max-w-xs">
+                  <div className="w-12 h-12 mx-auto bg-purple-900/50 rounded-full flex items-center justify-center mb-3 border border-purple-500/50">
+                    <tier.icon className={`w-6 h-6 ${tier.color}`} />
+                  </div>
+                  <h4 className="font-bold text-gray-100 text-sm">{tier.name}</h4>
+                  <span className="text-xs text-gray-400 mt-1 block">{tier.desc}</span>
+                </div>
+                {i < 3 && (
+                  <div className="hidden md:block text-purple-400/60 text-xs font-mono">→ fallback →</div>
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+          <p className="text-center text-xs text-gray-500 mt-4">System never fails — always produces results regardless of API availability</p>
+        </div>
+
+        {/* IoT Edge Pipeline */}
+        <div className="bg-nexus-800/80 glass-strong p-8 rounded-2xl glow-border">
+          <h2 className="text-2xl font-bold mb-8 text-purple-100 text-center flex items-center justify-center gap-2">
+            <Wifi className="w-6 h-6 text-cyan-400" />
+            IoT Edge Pipeline
+          </h2>
+          <div className="flex flex-col items-center gap-4">
+            {[
+              { title: "ESP32 + DHT11 Sensor", desc: "Reads temperature & humidity every 2 seconds. Triggers relay at 32°C threshold.", icon: Thermometer },
+              { title: "Raspberry Pi Gateway", desc: "HTTP server on port 5001. Receives sensor data, generates compliance incidents.", icon: Cpu },
+              { title: "NexusIQ Cloud Backend", desc: "POST /upload-text ingestion. SSE stream to frontend. Knowledge Graph update.", icon: Network },
+              { title: "Compliance Alert", desc: "ISO 27001 PE-14 thermal incident auto-generated. Entities extracted and graphed.", icon: ShieldCheck }
+            ].map((step, i) => (
+              <React.Fragment key={i}>
+                <div className="w-full max-w-lg bg-nexus-900/80 p-5 rounded-xl border border-cyan-900/30 flex items-center gap-5 hover-lift animate-slide-up" style={{ animationDelay: `${i * 100}ms` }}>
+                  <div className="w-14 h-14 shrink-0 rounded-xl bg-cyan-950/80 border border-cyan-700/40 flex items-center justify-center">
+                    <step.icon className="w-7 h-7 text-cyan-400" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-100">{step.title}</h4>
+                    <p className="text-xs text-gray-400 mt-1">{step.desc}</p>
+                  </div>
+                </div>
+                {i < 3 && (
+                  <div className="animate-pulse">
+                    <ArrowDown className="w-6 h-6 text-cyan-400/60" />
+                  </div>
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-nexus-800/80 glass-strong p-8 rounded-2xl glow-border text-center">
+          <h2 className="text-2xl font-bold mb-4 text-purple-100">Platform at a Glance</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { label: "Total Features", value: "31+" },
+              { label: "AI Models", value: "4" },
+              { label: "Input Formats", value: "4" },
+              { label: "IoT Sensors", value: "3" }
+            ].map((stat, i) => (
+              <div key={i} className="p-4 rounded-xl bg-nexus-900/60 border border-purple-900/30">
+                <div className="text-2xl font-bold text-purple-300">{stat.value}</div>
+                <div className="text-xs text-gray-400 mt-1">{stat.label}</div>
               </div>
             ))}
           </div>

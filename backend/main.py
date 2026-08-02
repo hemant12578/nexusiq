@@ -57,7 +57,7 @@ async def sse_stream():
 @app.get("/")
 def root():
     return {
-        "name": "nexusiq-api", # hemant: renamed from NexusIQ Enterprise Engine
+        "name": "nexusiq-api",
         "status": "up",
         "version": "1.0.0"
     }
@@ -67,16 +67,14 @@ def health():
     return {"status": "healthy", "uptime": time.time() - stats["start_time"]}
 
 @app.post("/upload-pdf")
-# hemant: rate limiting this because shubham kept spamming the API during testing
 @limiter.limit("30/minute")
 async def upload_pdf(request: Request, file: UploadFile = File(...)):
     if not file.filename.endswith(".pdf"):
-        raise HTTPException(400, "Only PDF files accepted")
+        raise HTTPException(status_code=400, detail="Only PDF files are accepted.")
     
     contents = await file.read()
-    # shubham found this edge case where huge pdfs crash the container
     if len(contents) > 100 * 1024 * 1024:
-        raise HTTPException(400, "File too large, max 100MB. ask hemant if you need more")
+        raise HTTPException(status_code=400, detail="File size exceeds the 100MB limit.")
         
     pdf = fitz.open(stream=contents, filetype="pdf")
     
@@ -113,7 +111,7 @@ async def upload_pdf(request: Request, file: UploadFile = File(...)):
             "truncated": truncated
         }
     else:
-        raise HTTPException(500, result["error"])
+        raise HTTPException(status_code=500, detail=result["error"])
 
 @app.post("/upload-batch")
 @limiter.limit("30/minute")
@@ -156,7 +154,7 @@ async def upload_batch(request: Request, files: List[UploadFile] = File(...)):
 async def upload_audio(request: Request, file: UploadFile = File(...)):
     contents = await file.read()
     if len(contents) > 100 * 1024 * 1024:
-        raise HTTPException(400, "File too large, max 100MB")
+        raise HTTPException(status_code=400, detail="File size exceeds the 100MB limit.")
         
     result = transcribe_audio(contents, file.filename)
     
@@ -182,7 +180,7 @@ async def upload_audio(request: Request, file: UploadFile = File(...)):
 async def upload_video(request: Request, file: UploadFile = File(...)):
     contents = await file.read()
     if len(contents) > 100 * 1024 * 1024:
-        raise HTTPException(400, "File too large, max 100MB")
+        raise HTTPException(status_code=400, detail="File size exceeds the 100MB limit.")
     
     mime_type = file.content_type if file.content_type else "video/mp4"
     result = process_video(contents, file.filename, mime_type)
@@ -270,13 +268,21 @@ def export_report():
     return graph.generate_audit_report()
 
 class QueryRequest(BaseModel):
-    question: str
+    question: Optional[str] = None
+    chatInput: Optional[str] = None
+
+    def get_question(self) -> str:
+        return self.question or self.chatInput or ""
 
 @app.post("/query")
+@app.post("/ask-compliance")
 @limiter.limit("30/minute")
 def query(request: Request, req: QueryRequest):
     start = time.time()
-    
+    user_q = req.get_question()
+    if not user_q:
+        raise HTTPException(status_code=400, detail="Missing question or chatInput parameter")
+
     graph_data = graph.get_graph_json()
     
     if not graph_data["nodes"]:
@@ -287,14 +293,14 @@ def query(request: Request, req: QueryRequest):
             "confidence_score": 0.0
         }
     
-    context, n_count, e_count = graph.get_context_for_query(req.question)
-    result = answer_query(req.question, context, n_count, e_count)
-    conf_score = graph.calculate_confidence(req.question, n_count, e_count)
+    context, n_count, e_count = graph.get_context_for_query(user_q)
+    result = answer_query(user_q, context, n_count, e_count)
+    conf_score = graph.calculate_confidence(user_q, n_count, e_count)
     result["confidence_score"] = conf_score
     
     response_time = int((time.time() - start) * 1000)
     stats["total_queries"] += 1
-    sse_events.append({'type': 'query', 'question': req.question[:50], 'timestamp': time.time()})
+    sse_events.append({'type': 'query', 'question': user_q[:50], 'timestamp': time.time()})
     
     return {
         "answer": result["answer"],
@@ -302,7 +308,7 @@ def query(request: Request, req: QueryRequest):
         "confidence_score": result.get("confidence_score", 0.0),
         "nodes_searched": len(graph_data["nodes"]),
         "edges_searched": len(graph_data["edges"]),
-        "response_time_ms": response_time # TODO: add to prometheus metrics
+        "response_time_ms": response_time
     }
 
 @app.delete("/reset")
@@ -317,8 +323,8 @@ def reset():
 # RAZORPAY INTEGRATION ENDPOINTS
 # ==========================================
 
-RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_test_TKmFOflmOpT9Kw")
-RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "RUf5kPeePt2vFZnxG0H7PioT")
+RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")
 
 class CreateOrderRequest(BaseModel):
     amount: int  # in paise (e.g., 299900 = ₹2999)

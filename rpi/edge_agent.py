@@ -32,7 +32,7 @@ def blink_led(times=3):
         time.sleep(0.2)
 
 def save_to_offline_queue(payload: dict):
-    """save to local queue"""
+    """Save incident payload to the local offline queue."""
     queue = []
     if os.path.exists(QUEUE_FILE):
         try:

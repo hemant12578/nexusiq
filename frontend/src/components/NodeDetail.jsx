@@ -24,7 +24,7 @@ const NODE_ICONS = {
 }
 
 export default function NodeDetail({ node, onClose }) {
-  // shubham: added this state for the fade-in animation, kinda hacky but works
+  // Manage component visibility for mount animations
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
@@ -81,7 +81,7 @@ export default function NodeDetail({ node, onClose }) {
             </button>
           </div>
 
-          {/* hemant: show node properties below */}
+          {/* Display detailed entity properties */}
           <div className="space-y-0 text-xs">
             <div className="flex items-center justify-between py-2 border-t border-purple-900/15">
               <span className="text-[10px] text-gray-500 uppercase tracking-wider flex items-center gap-1">

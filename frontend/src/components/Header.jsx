@@ -73,7 +73,7 @@ ${reportData.top_critical_entities.map((e, idx) => `${idx + 1}. **${e.name}** ($
 ## Audit Verdict
 ${reportData.audit_verdict}
 `
-      // hemant: making a fake blob download instead of a real PDF for now
+      // Create a blob to simulate a document download
       const blob = new Blob([markdownContent], { type: 'text/markdown;charset=utf-8;' })
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
@@ -189,7 +189,7 @@ ${reportData.audit_verdict}
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-emerald-300 text-xs font-semibold flex items-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                {/* shubham wanted this badge to look cool */}
+                {/* System status indicator */}
                 <span>System Secure</span>
               </span>
             </div>
