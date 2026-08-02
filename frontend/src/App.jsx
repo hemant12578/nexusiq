@@ -10,6 +10,7 @@ import AboutPage from './pages/AboutPage'
 import ArchitecturePage from './pages/ArchitecturePage'
 import NotFoundPage from './pages/NotFoundPage'
 import axios from 'axios'
+import { auth, onAuthStateChanged } from './firebase'
 
 const API = import.meta.env.VITE_API_URL || 'https://nexusiq-backend-production.up.railway.app'
 
@@ -24,6 +25,17 @@ export default function App() {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => { setMounted(true) }, [])
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        setUser({ email: firebaseUser.email, role: 'officer', uid: firebaseUser.uid })
+      } else {
+        setUser(null)
+      }
+    })
+    return () => unsubscribe()
+  }, [])
 
   const fetchGraph = async () => {
     try {
@@ -59,6 +71,7 @@ export default function App() {
             <ProtectedRoute user={user}>
               <Workspace
                 API={API}
+                user={user}
                 graphData={graphData}
                 stats={stats}
                 loading={loading}

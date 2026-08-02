@@ -5,7 +5,7 @@ import StatsBar from '../components/StatsBar'
 import NodeDetail from '../components/NodeDetail'
 import { BrainCircuit, FileUp, Mic, FileText } from 'lucide-react'
 
-export default function Workspace({ API, graphData, stats, loading, setLoading, selectedNode, setSelectedNode, fetchGraph, fetchStats, handleUploadSuccess }) {
+export default function Workspace({ API, graphData, stats, loading, setLoading, selectedNode, setSelectedNode, fetchGraph, fetchStats, handleUploadSuccess, user }) {
   return (
     <div className="relative z-10 flex flex-col h-[calc(100vh-61px)] overflow-hidden">
       <StatsBar stats={stats} />
@@ -17,6 +17,7 @@ export default function Workspace({ API, graphData, stats, loading, setLoading, 
             API={API}
             onUploadSuccess={handleUploadSuccess}
             setLoading={setLoading}
+            user={user}
           />
         </div>
 
@@ -81,7 +82,7 @@ export default function Workspace({ API, graphData, stats, loading, setLoading, 
 
 
         <div className="w-96 border-l border-purple-900/20 overflow-y-auto glass-strong">
-          <QueryInterface API={API} onQuery={() => { fetchGraph(); fetchStats(); }} />
+          <QueryInterface API={API} onQuery={() => { fetchGraph(); fetchStats(); }} user={user} />
         </div>
       </div>
     </div>

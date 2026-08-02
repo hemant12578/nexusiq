@@ -1,8 +1,9 @@
 import { useState, useRef } from "react"
 import axios from "axios"
 import { FolderUp, FileUp, Mic, FileText, CheckCircle2, Zap, Sparkles, Database, Layers, AlertTriangle, X } from "lucide-react"
+import { saveUploadRecord } from '../services/firestoreService'
 
-export default function UploadPanel({ API, onUploadSuccess, setLoading }) {
+export default function UploadPanel({ API, onUploadSuccess, setLoading, user }) {
   const [uploads, setUploads] = useState([])
   const [recording, setRecording] = useState(false)
   const [text, setText] = useState("")
@@ -40,6 +41,7 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading }) {
         type: "pdf",
         ts: Date.now()
       }])
+      saveUploadRecord(user?.uid, file.name, 'pdf', res.data.entities_found, res.data.relationships_found)
       onUploadSuccess()
       flashSuccess()
     } catch (e) {
@@ -85,6 +87,7 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading }) {
             type: "audio",
             ts: Date.now()
           }])
+          saveUploadRecord(user?.uid, 'Audio Recording', 'audio', res.data.entities_found, 0)
           onUploadSuccess()
           flashSuccess()
         } catch (e) {
@@ -122,6 +125,7 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading }) {
         type: "text",
         ts: Date.now()
       }])
+      saveUploadRecord(user?.uid, 'Text Input', 'text', res.data.entities_found, res.data.relationships_found)
       setText("")
       onUploadSuccess()
       flashSuccess()

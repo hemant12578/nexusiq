@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react"
 import axios from "axios"
 import { BrainCircuit, Sparkles, Search, ShieldCheck, Clock, Database, ArrowRight, CornerDownRight } from "lucide-react"
+import { saveQueryHistory } from '../services/firestoreService'
 
 function TypingEffect({ text, speed = 10 }) {
   const [displayed, setDisplayed] = useState("")
@@ -30,7 +31,7 @@ function TypingEffect({ text, speed = 10 }) {
   )
 }
 
-export default function QueryInterface({ API, onQuery }) {
+export default function QueryInterface({ API, onQuery, user }) {
   const [question, setQuestion] = useState("")
   const [answer, setAnswer] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -57,6 +58,7 @@ export default function QueryInterface({ API, onQuery }) {
       }
       setAnswer(result)
       setHistory(prev => [result, ...prev].slice(0, 5))
+      saveQueryHistory(user?.uid, question, cleanText || rawAnswer, res.data.sources || [])
       onQuery()
     } catch (e) {
       setAnswer({ answer: "Query failed. Please check backend connection.", sources: [], ts: Date.now() })

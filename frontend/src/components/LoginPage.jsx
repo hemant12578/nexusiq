@@ -2,6 +2,7 @@ import { useState } from "react"
 import { ShieldCheck, Lock, User, KeyRound, Fingerprint, CheckCircle2, Building2, Sparkles, ArrowRight } from "lucide-react"
 import { auth, signInWithEmailAndPassword } from "../firebase"
 import { useNavigate, Link } from "react-router-dom"
+import { saveUserProfile } from "../services/firestoreService"
 
 export default function LoginPage({ onLoginSuccess }) {
   const navigate = useNavigate()
@@ -30,7 +31,8 @@ export default function LoginPage({ onLoginSuccess }) {
       setScanning(false)
       setAuthed(true)
       setTimeout(() => {
-        onLoginSuccess({ email, role })
+        saveUserProfile(auth.currentUser?.uid || 'demo-user', email, role)
+        onLoginSuccess({ email, role, uid: auth.currentUser?.uid || 'demo-user' })
         navigate("/workspace")
       }, 700)
     }, 1000)

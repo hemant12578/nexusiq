@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app"
 import { getAnalytics, isSupported } from "firebase/analytics"
 import { getAuth, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth"
+import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, limit, serverTimestamp, doc, setDoc } from 'firebase/firestore'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
@@ -27,15 +28,27 @@ if (typeof window !== "undefined") {
 
 // Auth instance
 const auth = getAuth(app)
+const db = getFirestore(app)
 const googleProvider = new GoogleAuthProvider()
 
 export {
   app,
   analytics,
   auth,
+  db,
   googleProvider,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
-  onAuthStateChanged
+  onAuthStateChanged,
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  limit,
+  serverTimestamp,
+  doc,
+  setDoc
 }
