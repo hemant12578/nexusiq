@@ -308,6 +308,7 @@ class VerifyPaymentRequest(BaseModel):
     razorpay_payment_id: str
     razorpay_signature: str
 
+@app.post("/create-order")
 @app.post("/api/create-order")
 @limiter.limit("20/minute")
 async def create_order(request: Request, req: CreateOrderRequest):
@@ -339,6 +340,7 @@ async def create_order(request: Request, req: CreateOrderRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to create Razorpay order: {str(e)}")
 
+@app.post("/verify-payment")
 @app.post("/api/verify-payment")
 @limiter.limit("20/minute")
 async def verify_payment(request: Request, req: VerifyPaymentRequest):
