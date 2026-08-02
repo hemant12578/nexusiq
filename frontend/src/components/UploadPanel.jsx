@@ -2,7 +2,7 @@ import { useState, useRef } from "react"
 import axios from "axios"
 import { FolderUp, FileUp, Mic, FileText, Video, CheckCircle2, Zap, Sparkles, Database, Layers, AlertTriangle, X } from "lucide-react"
 import { saveUploadRecord } from '../services/firestoreService'
-import { getApiUrl } from '../utils/api'
+import { getApiUrl, friendlyError } from '../utils/api'
 
 export default function UploadPanel({ API, onUploadSuccess, setLoading, user }) {
   const [uploads, setUploads] = useState([])
@@ -50,12 +50,7 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading, user }) 
       flashSuccess()
     } catch (e) {
       console.error("Upload PDF error:", e)
-      const detail = e.response?.data?.detail
-      const msg = typeof detail === 'string' ? detail 
-        : (e.code === 'ECONNABORTED' ? 'Upload timed out. Please try a smaller PDF file.' : null)
-        || e.message
-        || 'PDF upload failed'
-      showToast(msg)
+      showToast(friendlyError(e))
     }
     setLoading(false)
     setUploading(false)
@@ -79,7 +74,7 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading, user }) 
       onUploadSuccess()
       flashSuccess()
     } catch (e) {
-      showToast(e.response?.data?.detail || "Video processing failed")
+      showToast(friendlyError(e))
     }
     setLoading(false)
     setUploading(false)
@@ -111,7 +106,7 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading, user }) 
           onUploadSuccess();
           flashSuccess();
         } catch (e) {
-          showToast(e.response?.data?.detail || "Audio upload failed");
+          showToast(friendlyError(e));
         }
         setLoading(false);
         setUploading(false);
@@ -147,7 +142,7 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading, user }) 
           onUploadSuccess()
           flashSuccess()
         } catch (e) {
-          showToast('Audio upload failed')
+          showToast(friendlyError(e))
         }
         setLoading(false)
         setUploading(false)
@@ -186,7 +181,7 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading, user }) 
       onUploadSuccess()
       flashSuccess()
     } catch (e) {
-      showToast('Text upload failed')
+      showToast(friendlyError(e))
     }
     setLoading(false)
     setUploading(false)

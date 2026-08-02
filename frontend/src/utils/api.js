@@ -1,27 +1,41 @@
 import axios from 'axios';
 
-// Configure Axios automatic retry interceptor for idle tab reconnects & network hiccups
+const FALLBACK = 'https://nexusiq-backend-production.up.railway.app';
+
+// Axios retry interceptor — silently retries transient failures
 axios.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const config = error.config;
-    // Retry up to 3 times on Network Error or 5xx server drops
-    if (config && (!config._retryCount || config._retryCount < 3)) {
-      if (!error.response || error.response.status >= 500 || error.message === 'Network Error') {
-        config._retryCount = (config._retryCount || 0) + 1;
-        const delayMs = config._retryCount * 800; // 800ms, 1600ms, 2400ms
-        await new Promise((resolve) => setTimeout(resolve, delayMs));
-        return axios(config);
+  (res) => res,
+  async (err) => {
+    const cfg = err.config;
+    if (!cfg) return Promise.reject(err);
+    cfg._retryCount = cfg._retryCount || 0;
+    const isTransient = !err.response || err.response.status >= 500 || err.message === 'Network Error';
+    if (isTransient && cfg._retryCount < 3) {
+      cfg._retryCount++;
+      // Clear Content-Type for FormData so browser regenerates multipart boundary
+      if (cfg.data instanceof FormData && cfg.headers) {
+        delete cfg.headers['Content-Type'];
+        delete cfg.headers['content-type'];
       }
+      await new Promise(r => setTimeout(r, cfg._retryCount * 1500));
+      return axios(cfg);
     }
-    return Promise.reject(error);
+    return Promise.reject(err);
   }
 );
 
 export const getApiUrl = (apiProp) => {
-  let url = apiProp || (import.meta.env && import.meta.env.VITE_API_URL) || 'https://nexusiq-backend-production.up.railway.app';
-  if (typeof url !== 'string' || !url || url.trim() === '' || url === 'undefined' || url === 'null') {
-    url = 'https://nexusiq-backend-production.up.railway.app';
-  }
+  const url = apiProp || (import.meta.env && import.meta.env.VITE_API_URL) || FALLBACK;
+  if (typeof url !== 'string' || !url || url === 'undefined' || url === 'null') return FALLBACK;
   return url.replace(/\/+$/, '');
+};
+
+// Friendly error — suppress scary raw messages
+export const friendlyError = (e) => {
+  if (e.code === 'ECONNABORTED') return 'Request timed out. Try a smaller file.';
+  const detail = e.response?.data?.detail;
+  if (typeof detail === 'string') return detail;
+  // Suppress transient network errors — return null so toast is skipped
+  if (e.message === 'Network Error') return null;
+  return e.message || 'Something went wrong';
 };
