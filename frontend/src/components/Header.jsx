@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import { Cpu, Layers, Network, Activity, ShieldCheck, Lock, Globe, FolderKanban, LogOut, FileSpreadsheet } from "lucide-react"
 import axios from "axios"
 
@@ -26,9 +27,11 @@ function AnimatedNumber({ value, className }) {
   )
 }
 
-export default function Header({ stats, currentPage, onNavigate, user, onLogout, API }) {
+export default function Header({ stats, user, onLogout, API }) {
   const [mounted, setMounted] = useState(false)
   const [downloadingReport, setDownloadingReport] = useState(false)
+  const location = useLocation()
+  const navigate = useNavigate()
 
   useEffect(() => { setMounted(true) }, [])
 
@@ -74,8 +77,8 @@ ${reportData.audit_verdict}
     <header className={`border-b border-purple-900/30 px-6 py-3.5 flex items-center justify-between bg-nexus-900/95 backdrop-blur-2xl z-30 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
 
       <div className="flex items-center gap-6">
-        <div
-          onClick={() => onNavigate("landing")}
+        <Link
+          to="/"
           className="flex items-center gap-3 group cursor-pointer"
         >
           <div className="w-10 h-10 bg-gradient-to-br from-purple-600 via-violet-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-600/30 animate-glow-pulse group-hover:scale-105 transition-transform duration-300 relative">
@@ -88,39 +91,63 @@ ${reportData.audit_verdict}
               Compliance Knowledge Graph
             </div>
           </div>
-        </div>
+        </Link>
 
 
         <nav className="hidden md:flex items-center gap-1.5 pl-6 border-l border-purple-900/30">
-          <button
-            onClick={() => onNavigate("landing")}
+          <Link
+            to="/"
             className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-              currentPage === "landing"
+              location.pathname === "/"
                 ? "bg-purple-900/50 text-purple-300 border border-purple-700/40"
                 : "text-gray-400 hover:text-gray-200 hover:bg-nexus-800/40"
             }`}
           >
             <Globe className="w-3.5 h-3.5" />
             <span>Overview</span>
-          </button>
+          </Link>
 
-          <button
-            onClick={() => onNavigate("app")}
+          <Link
+            to="/workspace"
             className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-              currentPage === "app"
+              location.pathname === "/workspace"
                 ? "bg-purple-900/50 text-purple-300 border border-purple-700/40"
                 : "text-gray-400 hover:text-gray-200 hover:bg-nexus-800/40"
             }`}
           >
             <FolderKanban className="w-3.5 h-3.5" />
             <span>Workspace</span>
-          </button>
+          </Link>
+
+          <Link
+            to="/about"
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+              location.pathname === "/about"
+                ? "bg-purple-900/50 text-purple-300 border border-purple-700/40"
+                : "text-gray-400 hover:text-gray-200 hover:bg-nexus-800/40"
+            }`}
+          >
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>About</span>
+          </Link>
+
+          <Link
+            to="/architecture"
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+              location.pathname === "/architecture"
+                ? "bg-purple-900/50 text-purple-300 border border-purple-700/40"
+                : "text-gray-400 hover:text-gray-200 hover:bg-nexus-800/40"
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span>Architecture</span>
+          </Link>
         </nav>
       </div>
 
 
       <div className="flex gap-6 text-sm items-center">
-        {currentPage === "app" && (
+        {location.pathname === "/workspace" && (
           <div className="hidden lg:flex items-center gap-6">
             {[
               { label: 'Nodes', value: stats.total_nodes, color: 'text-purple-400', icon: Network },
@@ -174,7 +201,7 @@ ${reportData.audit_verdict}
                 <div className="text-[10px] text-purple-400 font-medium uppercase tracking-wider">{user.role}</div>
               </div>
               <button
-                onClick={onLogout}
+                onClick={() => { onLogout(); navigate('/'); }}
                 title="Logout"
                 className="p-2 rounded-lg bg-nexus-800/80 hover:bg-red-950/40 text-gray-400 hover:text-red-400 border border-purple-900/30 hover:border-red-900/40 transition-all hover-pop"
               >
@@ -182,13 +209,13 @@ ${reportData.audit_verdict}
               </button>
             </div>
           ) : (
-            <button
-              onClick={() => onNavigate("login")}
+            <Link
+              to="/login"
               className="px-4 py-2 bg-purple-900/40 hover:bg-purple-800/50 border border-purple-700/40 rounded-xl text-xs font-semibold text-purple-200 transition-all hover-lift flex items-center gap-1.5"
             >
               <Lock className="w-3.5 h-3.5 text-purple-400" />
               <span>Sign in</span>
-            </button>
+            </Link>
           )}
         </div>
       </div>

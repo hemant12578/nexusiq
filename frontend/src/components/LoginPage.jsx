@@ -1,8 +1,10 @@
 import { useState } from "react"
 import { ShieldCheck, Lock, User, KeyRound, Fingerprint, CheckCircle2, Building2, Sparkles, ArrowRight } from "lucide-react"
 import { auth, signInWithEmailAndPassword } from "../firebase"
+import { useNavigate, Link } from "react-router-dom"
 
-export default function LoginPage({ onLoginSuccess, onNavigate }) {
+export default function LoginPage({ onLoginSuccess }) {
+  const navigate = useNavigate()
   const [role, setRole] = useState("officer")
   const [email, setEmail] = useState("compliance.officer@nexusiq.enterprise")
   const [password, setPassword] = useState("••••••••••••")
@@ -29,7 +31,7 @@ export default function LoginPage({ onLoginSuccess, onNavigate }) {
       setAuthed(true)
       setTimeout(() => {
         onLoginSuccess({ email, role })
-        onNavigate("app")
+        navigate("/workspace")
       }, 700)
     }, 1000)
   }
@@ -168,12 +170,12 @@ export default function LoginPage({ onLoginSuccess, onNavigate }) {
 
 
         <div className="text-center">
-          <button
-            onClick={() => onNavigate("landing")}
+          <Link
+            to="/"
             className="text-xs text-gray-500 hover:text-purple-400 transition-colors"
           >
             ← Back
-          </button>
+          </Link>
         </div>
       </div>
     </div>

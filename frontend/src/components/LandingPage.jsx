@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { Link } from "react-router-dom"
 import {
   ShieldCheck,
   Network,
@@ -23,7 +24,7 @@ import {
   Globe
 } from "lucide-react"
 
-export default function LandingPage({ onNavigate }) {
+export default function LandingPage() {
   const [activeTab, setActiveTab] = useState("pdf")
   const [openFaq, setOpenFaq] = useState(null)
 
@@ -90,21 +91,21 @@ export default function LandingPage({ onNavigate }) {
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
-          <button
-            onClick={() => onNavigate("app")}
+          <Link
+            to="/workspace"
             className="px-8 py-4 bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl font-bold text-sm shadow-xl shadow-purple-700/30 transition-all hover-lift flex items-center gap-2.5 group"
           >
             <span>Open workspace</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </button>
+          </Link>
 
-          <button
-            onClick={() => onNavigate("login")}
+          <Link
+            to="/login"
             className="px-8 py-4 bg-nexus-800/80 hover:bg-nexus-700/80 border border-purple-900/50 hover:border-purple-600/50 rounded-xl font-bold text-sm text-gray-300 transition-all hover-lift flex items-center gap-2"
           >
             <Lock className="w-4 h-4 text-purple-400" />
             <span>Sign in</span>
-          </button>
+          </Link>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto pt-8">
@@ -343,13 +344,13 @@ export default function LandingPage({ onNavigate }) {
             InnovaHack Chapter 1 • Problem Statement 1: Multi-Modal Knowledge Graph Synthesis for Enterprise Compliance.
           </p>
           
-          <button
-            onClick={() => onNavigate("app")}
+          <Link
+            to="/workspace"
             className="px-10 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl font-bold text-xs uppercase tracking-wider text-white shadow-xl shadow-purple-700/40 hover-lift inline-flex items-center gap-2"
           >
             <Sparkles className="w-4 h-4" />
             <span>Open workspace</span>
-          </button>
+          </Link>
         </div>
 
         <div className="text-[11px] text-gray-600 font-light pt-4 flex items-center justify-center gap-4">
