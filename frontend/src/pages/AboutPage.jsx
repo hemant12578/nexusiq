@@ -11,20 +11,18 @@ const ThreeHero = () => {
 
   useEffect(() => {
     if (!mountRef.current) return
-    const w = mountRef.current.clientWidth
-    const h = mountRef.current.clientHeight
 
     const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(60, w / h, 0.1, 1000)
-    camera.position.z = 250
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000)
+    camera.position.z = 320
 
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
-    renderer.setSize(w, h)
+    renderer.setSize(window.innerWidth, window.innerHeight)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     mountRef.current.appendChild(renderer.domElement)
 
-    // Constellation particle network matching main Canvas3D
-    const particleCount = 120
+    // Full-page constellation particle network
+    const particleCount = 260
     const geometry = new THREE.BufferGeometry()
     const positions = new Float32Array(particleCount * 3)
     const colors = new Float32Array(particleCount * 3)
@@ -37,9 +35,9 @@ const ThreeHero = () => {
     ]
 
     for (let i = 0; i < particleCount; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 500
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 350
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 300
+      positions[i * 3] = (Math.random() - 0.5) * 900
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 900
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 450
 
       const col = colorChoices[Math.floor(Math.random() * colorChoices.length)]
       colors[i * 3] = col.r
@@ -57,7 +55,7 @@ const ThreeHero = () => {
     const ctx = canvas.getContext("2d")
     const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32)
     grad.addColorStop(0, "rgba(255, 255, 255, 1)")
-    grad.addColorStop(0.3, "rgba(124, 58, 237, 0.8)")
+    grad.addColorStop(0.3, "rgba(124, 58, 237, 0.9)")
     grad.addColorStop(1, "rgba(124, 58, 237, 0)")
     ctx.fillStyle = grad
     ctx.fillRect(0, 0, 64, 64)
@@ -65,7 +63,7 @@ const ThreeHero = () => {
     const texture = new THREE.CanvasTexture(canvas)
 
     const material = new THREE.PointsMaterial({
-      size: 12,
+      size: 15,
       vertexColors: true,
       map: texture,
       transparent: true,
@@ -80,7 +78,7 @@ const ThreeHero = () => {
     const lineMaterial = new THREE.LineBasicMaterial({
       color: 0x8b5cf6,
       transparent: true,
-      opacity: 0.25,
+      opacity: 0.28,
       blending: THREE.AdditiveBlending,
     })
 
@@ -93,8 +91,8 @@ const ThreeHero = () => {
     let mouseX = 0
     let mouseY = 0
     const handleMouseMove = (e) => {
-      mouseX = (e.clientX - window.innerWidth / 2) * 0.1
-      mouseY = (e.clientY - window.innerHeight / 2) * 0.1
+      mouseX = (e.clientX - window.innerWidth / 2) * 0.15
+      mouseY = (e.clientY - window.innerHeight / 2) * 0.15
     }
     window.addEventListener("mousemove", handleMouseMove)
 
@@ -104,10 +102,10 @@ const ThreeHero = () => {
       req = requestAnimationFrame(animate)
       const elapsedTime = clock.getElapsedTime()
 
-      particleSystem.rotation.y = elapsedTime * 0.04
-      particleSystem.rotation.x = elapsedTime * 0.02
-      lineMesh.rotation.y = elapsedTime * 0.04
-      lineMesh.rotation.x = elapsedTime * 0.02
+      particleSystem.rotation.y = elapsedTime * 0.05
+      particleSystem.rotation.x = elapsedTime * 0.03
+      lineMesh.rotation.y = elapsedTime * 0.05
+      lineMesh.rotation.x = elapsedTime * 0.03
 
       camera.position.x += (mouseX - camera.position.x) * 0.04
       camera.position.y += (-mouseY - camera.position.y) * 0.04
@@ -121,7 +119,7 @@ const ThreeHero = () => {
           const dy = pos[i * 3 + 1] - pos[j * 3 + 1]
           const dz = pos[i * 3 + 2] - pos[j * 3 + 2]
           const dist = Math.sqrt(dx * dx + dy * dy + dz * dz)
-          if (dist < 100) {
+          if (dist < 120) {
             linePositions[lineIndex++] = pos[i * 3]
             linePositions[lineIndex++] = pos[i * 3 + 1]
             linePositions[lineIndex++] = pos[i * 3 + 2]
@@ -139,12 +137,9 @@ const ThreeHero = () => {
     animate()
 
     const handleResize = () => {
-      if (!mountRef.current) return
-      const width = mountRef.current.clientWidth
-      const height = mountRef.current.clientHeight
-      camera.aspect = width / height
+      camera.aspect = window.innerWidth / window.innerHeight
       camera.updateProjectionMatrix()
-      renderer.setSize(width, height)
+      renderer.setSize(window.innerWidth, window.innerHeight)
     }
     window.addEventListener("resize", handleResize)
 
@@ -158,13 +153,10 @@ const ThreeHero = () => {
       lineMaterial.dispose()
       texture.dispose()
       renderer.dispose()
-      if (mountRef.current) {
-        mountRef.current.innerHTML = ""
-      }
     }
   }, [])
 
-  return <div ref={mountRef} className="absolute inset-0 z-0 pointer-events-none opacity-80" />
+  return <div ref={mountRef} className="fixed inset-0 z-0 pointer-events-none opacity-75 overflow-hidden" />
 }
 
 export default function AboutPage() {
@@ -216,7 +208,7 @@ export default function AboutPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-nexus-900 text-white overflow-y-auto relative">
+    <div className="min-h-screen bg-nexus-900/90 text-white overflow-y-auto relative z-10">
       <style>{`
         @keyframes flowPulse {
           0% { opacity: 0.3; text-shadow: 0 0 0px transparent; }
@@ -228,24 +220,26 @@ export default function AboutPage() {
         }
       `}</style>
       
-      {/* 3D Hero Section */}
-      <div className="relative w-full h-[450px] flex flex-col justify-center items-center overflow-hidden border-b border-purple-500/20">
-        <ThreeHero />
-        <div className="absolute top-6 left-6 z-20">
-          <Link to="/" className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors focus-glow rounded-md px-2 py-1">
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Dashboard</span>
-          </Link>
-        </div>
-        <div className="relative z-10 text-center space-y-6 max-w-3xl px-6 animate-fade-in">
-          <h1 className="text-5xl md:text-7xl font-extrabold gradient-text tracking-tight pb-2">
-            About NexusIQ
-          </h1>
-          <p className="text-xl md:text-2xl text-purple-200 font-light tracking-wide drop-shadow-md">
-            Built for InnovaHack Chapter 1 — Round 2 <br className="hidden md:block"/> 
-            <span className="text-cyan-400 font-medium">Domain 3: Gen AI</span>
-          </p>
-        </div>
+      {/* Full-Page 3D Constellation Canvas Background */}
+      <ThreeHero />
+
+      {/* Navigation header */}
+      <div className="max-w-6xl mx-auto px-6 pt-8 pb-4 relative z-20">
+        <Link to="/" className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors focus-glow rounded-md px-3 py-1.5 bg-nexus-800/60 border border-purple-500/30 glass-strong">
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back to Dashboard</span>
+        </Link>
+      </div>
+
+      {/* Hero Header Section */}
+      <div className="relative z-10 text-center space-y-6 max-w-4xl mx-auto px-6 py-12 animate-fade-in">
+        <h1 className="text-5xl md:text-7xl font-extrabold gradient-text tracking-tight pb-2">
+          About NexusIQ
+        </h1>
+        <p className="text-xl md:text-2xl text-purple-200 font-light tracking-wide drop-shadow-md">
+          Built for InnovaHack Chapter 1 — Round 2 <br className="hidden md:block"/> 
+          <span className="text-cyan-400 font-medium">Domain 3: Gen AI</span>
+        </p>
       </div>
 
       <div className="max-w-6xl mx-auto px-6 py-16 space-y-24 relative z-10">
