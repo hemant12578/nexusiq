@@ -335,11 +335,55 @@ export default function GraphView({ graphData, onNodeClick }) {
     return () => { simulation.stop() }
   }, [graphData])
 
+  const handleExport = () => {
+    if (!svgRef.current) return;
+    const svgElement = svgRef.current;
+    const serializer = new XMLSerializer();
+    let source = serializer.serializeToString(svgElement);
+
+    if(!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)){
+        source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+    }
+    if(!source.match(/^<svg[^>]+"http\:\/\/www\.w3\.org\/1999\/xlink"/)){
+        source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+    }
+
+    source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
+
+    const url = "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(source);
+    
+    const rect = svgElement.getBoundingClientRect();
+    const canvas = document.createElement("canvas");
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+    const ctx = canvas.getContext("2d");
+
+    const img = new Image();
+    img.onload = function() {
+        ctx.fillStyle = "#0f172a"; // Match slate-900 background roughly
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+        const pngUrl = canvas.toDataURL("image/png");
+        const a = document.createElement("a");
+        a.download = "nexus_graph.png";
+        a.href = pngUrl;
+        a.click();
+    };
+    img.src = url;
+  };
+
   return (
     <div className="relative w-full h-full">
       {/* 7-Type Node Color Legend Overlay */}
       {graphData.nodes.length > 0 && (
-        <div className="absolute top-4 left-4 z-10 bg-nexus-900/80 backdrop-blur-md p-3 rounded-xl border border-purple-900/40 shadow-xl flex flex-wrap items-center gap-3 max-w-md">
+        <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+          <button 
+            onClick={handleExport}
+            className="px-3 py-1.5 text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 rounded-lg shadow transition-colors max-w-fit"
+          >
+            Export Graph
+          </button>
+          <div className="bg-nexus-900/80 backdrop-blur-md p-3 rounded-xl border border-purple-900/40 shadow-xl flex flex-wrap items-center gap-3 max-w-md">
           {[
             { label: "Person", color: NODE_COLORS.person },
             { label: "Document", color: NODE_COLORS.document },
@@ -354,6 +398,7 @@ export default function GraphView({ graphData, onNodeClick }) {
               <span>{type.label}</span>
             </div>
           ))}
+          </div>
         </div>
       )}
 

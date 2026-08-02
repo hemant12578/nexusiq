@@ -10,6 +10,7 @@ class GraphEngine:
         self.documents = set()
         self.ingestion_history = []
         self.id_map = {}
+        self.load_from_file()
     
     def add_entities(self, entities: List[Dict], source: str):
         self.documents.add(source)
@@ -40,6 +41,7 @@ class GraphEngine:
             "source": source,
             "timestamp": time.time()
         })
+        self.save_to_file()
     
     def add_relationships(self, relationships: List[Dict], source: str):
         for rel in relationships:
@@ -54,6 +56,7 @@ class GraphEngine:
                     relation=rel.get("relation", "related to"),
                     source=source
                 )
+        self.save_to_file()
     
     def get_graph_json(self) -> Dict:
         """build the json blob for the frontend"""
@@ -241,27 +244,37 @@ class GraphEngine:
             "timestamp": d.get("timestamp", 0)
         } for n, d in self.G.nodes(data=True) if d.get("timestamp", 0) >= cutoff]
 
-    def save_to_file(self, path: str = 'nexusiq_graph.json'):
-        data = nx.node_link_data(self.G)
-        for n in data.get('nodes', []):
-            if 'sources' in n and isinstance(n['sources'], set):
-                n['sources'] = list(n['sources'])
+    def save_to_file(self, path='graph_data.json'):
+        data = {
+            'nodes': [{**self.G.nodes[n], 'id': n, 'sources': list(self.G.nodes[n].get('sources', set()))} for n in self.G.nodes],
+            'edges': [{'from': u, 'to': v, **self.G.edges[u,v]} for u,v in self.G.edges],
+            'documents': list(self.documents),
+            'id_map': self.id_map
+        }
         with open(path, 'w') as f:
-            json.dump({"graph": data, "documents": list(self.documents), "ingestion_history": self.ingestion_history, "id_map": self.id_map}, f)
+            json.dump(data, f)
 
-    def load_from_file(self, path: str = 'nexusiq_graph.json'):
-        if not os.path.exists(path): return
-        with open(path, 'r') as f: data = json.load(f)
-        for n in data.get("graph", {}).get("nodes", []):
-            if 'sources' in n and isinstance(n['sources'], list):
-                n['sources'] = set(n['sources'])
-        self.G = nx.node_link_graph(data.get("graph", {}))
-        self.documents = set(data.get("documents", []))
-        self.ingestion_history = data.get("ingestion_history", [])
-        self.id_map = data.get("id_map", {})
+    def load_from_file(self, path='graph_data.json'):
+        if not os.path.exists(path):
+            return
+        try:
+            with open(path) as f:
+                data = json.load(f)
+            for node in data.get('nodes', []):
+                nid = node.pop('id')
+                node['sources'] = set(node.get('sources', []))
+                self.G.add_node(nid, **node)
+            for edge in data.get('edges', []):
+                self.G.add_edge(edge['from'], edge['to'], relation=edge.get('relation',''), source=edge.get('source',''))
+            self.documents = set(data.get('documents', []))
+            self.id_map = data.get('id_map', {})
+        except Exception as e:
+            print(f'Failed to load graph: {e}')
     
     def clear(self):
         self.G.clear()
         self.documents.clear()
         self.ingestion_history.clear()
         self.id_map.clear()
+        if os.path.exists('graph_data.json'):
+            os.remove('graph_data.json')

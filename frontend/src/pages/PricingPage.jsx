@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Check, Sparkles, Zap, ShieldCheck, Building2, HelpCircle, CheckCircle2, AlertCircle, Info, Loader2, CreditCard, Lock } from 'lucide-react'
 import axios from 'axios'
+import { saveSubscription } from '../services/firestoreService'
 
 export default function PricingPage({ user }) {
   const [isAnnual, setIsAnnual] = useState(true)
@@ -144,9 +145,10 @@ export default function PricingPage({ user }) {
                 razorpay_signature: response.razorpay_signature
               })
             }
+            await saveSubscription(user.uid, plan.name, response.razorpay_payment_id, response.razorpay_order_id)
             setPaymentStatus({
               type: "success",
-              message: `Payment Verified! Subscribed to ${plan.name} Plan (Payment ID: ${response.razorpay_payment_id})`
+              message: `🎉 ${plan.name} plan activated! Welcome aboard.`
             })
           } catch (verifyErr) {
             setPaymentStatus({

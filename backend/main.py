@@ -1,5 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional, List
 import os
@@ -7,6 +8,8 @@ import hmac
 import hashlib
 import time
 import razorpay
+import json
+import asyncio
 from dotenv import load_dotenv
 from gemini_engine import extract_entities, answer_query, transcribe_audio, process_video, get_hallucination_stats
 from graph_engine import GraphEngine
@@ -36,6 +39,20 @@ stats = {
     "total_queries": 0,
     "start_time": time.time()
 }
+
+sse_events = []
+
+@app.get('/events')
+async def sse_stream():
+    async def event_generator():
+        last_idx = len(sse_events)
+        while True:
+            if len(sse_events) > last_idx:
+                for evt in sse_events[last_idx:]:
+                    yield f'data: {json.dumps(evt)}\n\n'
+                last_idx = len(sse_events)
+            await asyncio.sleep(1)
+    return StreamingResponse(event_generator(), media_type='text/event-stream', headers={'Cache-Control': 'no-cache', 'Connection': 'keep-alive', 'Access-Control-Allow-Origin': '*'})
 
 @app.get("/")
 def root():
@@ -84,6 +101,7 @@ async def upload_pdf(request: Request, file: UploadFile = File(...)):
         graph.add_entities(result["entities"], file.filename)
         graph.add_relationships(result["relationships"], file.filename)
         stats["documents_processed"] += 1
+        sse_events.append({'type': 'upload', 'source': file.filename, 'entities': len(result['entities']), 'timestamp': time.time()})
         
         return {
             "success": True,
@@ -127,6 +145,7 @@ async def upload_batch(request: Request, files: List[UploadFile] = File(...)):
             graph.add_entities(result["entities"], file.filename)
             graph.add_relationships(result["relationships"], file.filename)
             stats["documents_processed"] += 1
+            sse_events.append({'type': 'upload', 'source': file.filename, 'entities': len(result['entities']), 'timestamp': time.time()})
             results.append({"filename": file.filename, "success": True, "truncated": truncated})
         else:
             results.append({"filename": file.filename, "success": False, "error": result["error"]})
@@ -148,6 +167,7 @@ async def upload_audio(request: Request, file: UploadFile = File(...)):
             graph.add_entities(extract_result["entities"], file.filename)
             graph.add_relationships(extract_result["relationships"], file.filename)
             stats["documents_processed"] += 1
+            sse_events.append({'type': 'upload', 'source': file.filename, 'entities': len(extract_result['entities']), 'timestamp': time.time()})
         
         return {
             "success": True,
@@ -174,6 +194,7 @@ async def upload_video(request: Request, file: UploadFile = File(...)):
             graph.add_entities(extract_result["entities"], file.filename)
             graph.add_relationships(extract_result["relationships"], file.filename)
             stats["documents_processed"] += 1
+            sse_events.append({'type': 'upload', 'source': file.filename, 'entities': len(extract_result['entities']), 'timestamp': time.time()})
         
         return {
             "success": True,
@@ -198,6 +219,7 @@ def upload_text(request: Request, data: TextInput):
         graph.add_entities(result["entities"], data.source_name)
         graph.add_relationships(result["relationships"], data.source_name)
         stats["documents_processed"] += 1
+        sse_events.append({'type': 'upload', 'source': data.source_name, 'entities': len(result['entities']), 'timestamp': time.time()})
         
         return {
             "success": True,
@@ -272,6 +294,7 @@ def query(request: Request, req: QueryRequest):
     
     response_time = int((time.time() - start) * 1000)
     stats["total_queries"] += 1
+    sse_events.append({'type': 'query', 'question': req.question[:50], 'timestamp': time.time()})
     
     return {
         "answer": result["answer"],

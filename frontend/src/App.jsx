@@ -11,6 +11,7 @@ import AboutPage from './pages/AboutPage'
 import ArchitecturePage from './pages/ArchitecturePage'
 import PricingPage from './pages/PricingPage'
 import NotFoundPage from './pages/NotFoundPage'
+import LiveFeed from './components/LiveFeed'
 import axios from 'axios'
 import { auth, onAuthStateChanged, signOut } from './firebase'
 
@@ -90,6 +91,7 @@ export default function App() {
       <div className={`min-h-screen bg-nexus-900 text-white flex flex-col font-sans transition-opacity duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
         <Canvas3D />
         <Header stats={stats} user={user} onLogout={handleLogout} API={API} />
+        <LiveFeed API={API} />
         <Routes>
           <Route path="/" element={<LandingPage user={user} />} />
           <Route path="/login" element={<LoginPage onLoginSuccess={setUser} />} />

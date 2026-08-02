@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom"
 import { Cpu, Layers, Network, Activity, ShieldCheck, Lock, Globe, FolderKanban, LogOut, FileSpreadsheet, Sparkles } from "lucide-react"
 import axios from "axios"
 import { auth, signOut } from "../firebase"
+import { getSubscription } from '../services/firestoreService'
 
 function AnimatedNumber({ value, className }) {
   const [display, setDisplay] = useState(value)
@@ -31,10 +32,23 @@ function AnimatedNumber({ value, className }) {
 export default function Header({ stats, user, onLogout, API }) {
   const [mounted, setMounted] = useState(false)
   const [downloadingReport, setDownloadingReport] = useState(false)
+  const [isPro, setIsPro] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
 
   useEffect(() => { setMounted(true) }, [])
+
+  useEffect(() => {
+    async function checkSub() {
+      if (user?.uid) {
+        const sub = await getSubscription(user.uid)
+        if (sub?.status === 'active') setIsPro(true)
+      } else {
+        setIsPro(false)
+      }
+    }
+    checkSub()
+  }, [user])
 
   const handleExportAuditReport = async () => {
     setDownloadingReport(true)
@@ -186,8 +200,9 @@ ${reportData.audit_verdict}
           {user ? (
             <div className="flex items-center gap-2.5">
               <div className="text-right">
-                <div className="text-xs font-semibold text-gray-200 truncate max-w-[130px]">
+                <div className="text-xs font-semibold text-gray-200 truncate max-w-[130px] flex items-center justify-end gap-1.5">
                   {user?.email ? user.email.split("@")[0] : "Officer"}
+                  {isPro && <span className="px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-[9px] text-emerald-400 font-bold uppercase">PRO</span>}
                 </div>
                 <div className="text-[10px] text-purple-400 font-medium uppercase tracking-wider">
                   {user?.role || "officer"}

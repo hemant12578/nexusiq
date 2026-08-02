@@ -83,3 +83,36 @@ export async function saveUserProfile(uid, email, role) {
     console.error('failed to save profile:', e)
   }
 }
+
+// Save subscription after successful payment
+export async function saveSubscription(uid, plan, paymentId, orderId) {
+  if (!uid) return
+  try {
+    await setDoc(doc(db, 'subscriptions', uid), {
+      plan,
+      paymentId,
+      orderId,
+      status: 'active',
+      subscribedAt: serverTimestamp(),
+      expiresAt: null // TODO: add expiry logic
+    }, { merge: true })
+  } catch (e) {
+    console.error('failed to save subscription:', e)
+  }
+}
+
+// Check if user has active subscription
+export async function getSubscription(uid) {
+  if (!uid) return null
+  try {
+    const snap = await getDocs(query(collection(db, 'subscriptions'), where('uid', '==', uid)))
+    // Actually use doc directly
+    const { getDoc } = await import('firebase/firestore')
+    const docSnap = await getDoc(doc(db, 'subscriptions', uid))
+    if (docSnap.exists()) return docSnap.data()
+    return null
+  } catch (e) {
+    console.error('failed to get subscription:', e)
+    return null
+  }
+}
