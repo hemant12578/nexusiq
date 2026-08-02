@@ -30,11 +30,9 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading, user }) 
     setLoading(true)
     setUploading(true)
     const form = new FormData()
-    // Upload file using FormData
     form.append("file", file)
     try {
       const res = await axios.post(`${API}/upload-pdf`, form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 60000
       })
       setUploads(prev => [...prev, {
@@ -50,9 +48,10 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading, user }) 
       flashSuccess()
     } catch (e) {
       console.error("Upload PDF error:", e)
-      const msg = e.response?.data?.detail 
-        || (e.code === 'ECONNABORTED' ? 'Upload timed out. Please try a smaller file.' : null)
-        || (e.message === 'Network Error' ? 'Network Error: Cannot connect to server. Please try again.' : e.message)
+      const detail = e.response?.data?.detail
+      const msg = typeof detail === 'string' ? detail 
+        : (e.code === 'ECONNABORTED' ? 'Upload timed out. Please try a smaller PDF file.' : null)
+        || e.message
         || 'PDF upload failed'
       showToast(msg)
     }
