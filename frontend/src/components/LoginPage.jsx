@@ -1,6 +1,6 @@
 import { useState } from "react"
-import { ShieldCheck, Lock, User, KeyRound, Fingerprint, CheckCircle2, Building2, Sparkles, ArrowRight } from "lucide-react"
-import { auth, signInWithEmailAndPassword } from "../firebase"
+import { ShieldCheck, Lock, User, KeyRound, Fingerprint, CheckCircle2, Building2, Sparkles, ArrowRight, Mail, AlertCircle } from "lucide-react"
+import { auth, signInWithEmailAndPassword, sendPasswordResetEmail } from "../firebase"
 import { useNavigate, Link, Navigate } from "react-router-dom"
 import { saveUserProfile } from "../services/firestoreService"
 
@@ -15,6 +15,9 @@ export default function LoginPage({ onLoginSuccess, user }) {
   const [scanning, setScanning] = useState(false)
   const [authed, setAuthed] = useState(false)
   const [firebaseStatus, setFirebaseStatus] = useState("")
+  const [resetMsg, setResetMsg] = useState("")
+  const [resetError, setResetError] = useState("")
+  const [resetLoading, setResetLoading] = useState(false)
 
   const handleLogin = async (e) => {
     e.preventDefault()
@@ -90,23 +93,40 @@ export default function LoginPage({ onLoginSuccess, user }) {
             </div>
           )}
 
+          {resetMsg && (
+            <div className="p-3 bg-emerald-950/60 border border-emerald-500/40 rounded-xl text-xs text-emerald-300 flex items-center gap-2 animate-fade-in">
+              <Mail className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>{resetMsg}</span>
+            </div>
+          )}
 
-          <div className="grid grid-cols-3 gap-1.5 p-1 bg-nexus-900/80 rounded-xl border border-purple-900/30">
-            {roles.map((r) => (
-              <button
-                key={r.id}
-                type="button"
-                onClick={() => setRole(r.id)}
-                className={`py-2 px-2 rounded-lg text-[11px] font-semibold transition-all flex flex-col items-center gap-1 ${
-                  role === r.id
-                    ? "bg-purple-600 text-white shadow-md shadow-purple-600/30"
-                    : "text-gray-400 hover:text-gray-200 hover:bg-nexus-800/50"
-                }`}
-              >
-                <r.icon className="w-3.5 h-3.5" />
-                <span className="truncate">{r.name.split(" ")[0]}</span>
-              </button>
-            ))}
+          {resetError && (
+            <div className="p-3 bg-red-950/60 border border-red-500/40 rounded-xl text-xs text-red-300 flex items-center gap-2 animate-fade-in">
+              <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+              <span>{resetError}</span>
+            </div>
+          )}
+
+          <div className="grid grid-cols-3 gap-2 bg-nexus-900/80 p-1 rounded-xl border border-purple-900/30">
+            {roles.map((r) => {
+              const Icon = r.icon
+              const active = role === r.id
+              return (
+                <button
+                  key={r.id}
+                  type="button"
+                  onClick={() => setRole(r.id)}
+                  className={`py-2 px-2 rounded-lg text-xs font-semibold transition-all flex flex-col items-center gap-1 ${
+                    active
+                      ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md"
+                      : "text-gray-400 hover:text-gray-200"
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{r.name.split(" ")[0]}</span>
+                </button>
+              )
+            })}
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
@@ -150,8 +170,13 @@ export default function LoginPage({ onLoginSuccess, user }) {
                 <input type="checkbox" defaultChecked className="rounded bg-nexus-900 border-purple-800 text-purple-600 focus:ring-0" />
                 <span>Remember session</span>
               </label>
-              <button type="button" className="text-purple-400 hover:text-purple-300 transition-colors">
-                Forgot password?
+              <button 
+                type="button" 
+                onClick={handleForgotPassword}
+                disabled={resetLoading}
+                className="text-purple-400 hover:text-purple-300 transition-colors font-medium hover:underline disabled:opacity-50"
+              >
+                {resetLoading ? "Sending link..." : "Forgot password?"}
               </button>
             </div>
 
