@@ -1,36 +1,70 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { getApiUrl } from '../utils/api';
 
 export default function LiveFeed({ API }) {
   const [events, setEvents] = useState([]);
 
   useEffect(() => {
-    const sseUrl = `${API}/events`;
-    const eventSource = new EventSource(sseUrl);
+    let eventSource = null;
+    let reconnectTimer = null;
 
-    eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        const eventId = data.timestamp ? `${data.timestamp}-${Math.random()}` : `evt-${Date.now()}-${Math.random()}`;
-        const newEvent = { ...data, id: eventId };
+    const connectSSE = () => {
+      const baseUrl = getApiUrl(API);
+      const sseUrl = `${baseUrl}/events`;
+      
+      if (eventSource) {
+        eventSource.close();
+      }
 
-        setEvents((prev) => [newEvent, ...prev].slice(0, 3));
+      eventSource = new EventSource(sseUrl);
 
-        // Auto remove event after 4 seconds
-        setTimeout(() => {
-          setEvents((prev) => prev.filter((e) => e.id !== eventId));
-        }, 4000);
-      } catch (err) {
-        console.error("Error parsing SSE data", err);
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          const eventId = data.timestamp ? `${data.timestamp}-${Math.random()}` : `evt-${Date.now()}-${Math.random()}`;
+          const newEvent = { ...data, id: eventId };
+
+          setEvents((prev) => [newEvent, ...prev].slice(0, 3));
+
+          // Auto remove event after 4 seconds
+          setTimeout(() => {
+            setEvents((prev) => prev.filter((e) => e.id !== eventId));
+          }, 4000);
+        } catch (err) {
+          console.error("Error parsing SSE data", err);
+        }
+      };
+
+      eventSource.onerror = () => {
+        if (eventSource) {
+          eventSource.close();
+        }
+        // Auto-reconnect after 3 seconds on drop
+        if (!reconnectTimer) {
+          reconnectTimer = setTimeout(() => {
+            reconnectTimer = null;
+            connectSSE();
+          }, 3000);
+        }
+      };
+    };
+
+    connectSSE();
+
+    // Reconnect when user returns to tab after idle
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        connectSSE();
       }
     };
 
-    eventSource.onerror = (err) => {
-      console.error("SSE error", err);
-    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      eventSource.close();
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      if (eventSource) eventSource.close();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [API]);
 

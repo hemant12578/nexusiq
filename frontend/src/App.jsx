@@ -83,7 +83,20 @@ export default function App() {
     } catch (e) { console.error('Stats fetch error:', e) }
   }
 
-  useEffect(() => { fetchGraph(); fetchStats() }, [])
+  useEffect(() => {
+    fetchGraph();
+    fetchStats();
+
+    // Auto-reconnect & fetch latest graph/stats when returning to idle tab
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchGraph();
+        fetchStats();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [])
 
   const handleUploadSuccess = () => {
     setTimeout(() => { fetchGraph(); fetchStats() }, 1000)
