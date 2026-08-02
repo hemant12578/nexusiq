@@ -37,8 +37,10 @@ export default function LoginPage({ onLoginSuccess, user }) {
       setScanning(false)
       setAuthed(true)
       setTimeout(() => {
-        saveUserProfile(auth.currentUser?.uid || 'demo-user', email, role)
-        onLoginSuccess({ email, role, uid: auth.currentUser?.uid || 'demo-user' })
+        const u = { email, role, uid: auth.currentUser?.uid || 'demo-user' }
+        saveUserProfile(u.uid, email, role)
+        try { localStorage.setItem('nexusiq_user', JSON.stringify(u)) } catch (e) {}
+        onLoginSuccess(u)
         navigate("/workspace")
       }, 700)
     }, 1000)

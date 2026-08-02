@@ -16,27 +16,37 @@ import { auth, onAuthStateChanged } from './firebase'
 const API = import.meta.env.VITE_API_URL || 'https://nexusiq-backend-production.up.railway.app'
 
 export default function App() {
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('nexusiq_user')
+      return saved ? JSON.parse(saved) : null
+    } catch (e) {
+      return null
+    }
+  })
   const [graphData, setGraphData] = useState({ nodes: [], edges: [] })
   const [stats, setStats] = useState({
     total_nodes: 0, total_edges: 0, documents_processed: 0, total_queries: 0
   })
   const [selectedNode, setSelectedNode] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => { setMounted(true) }, [])
+  const [mounted, setMounted] = useState(true)
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
-        setUser({ email: firebaseUser.email, role: 'officer', uid: firebaseUser.uid })
-      } else {
-        setUser(null)
+        const u = { email: firebaseUser.email, role: 'officer', uid: firebaseUser.uid }
+        setUser(u)
+        localStorage.setItem('nexusiq_user', JSON.stringify(u))
       }
     })
     return () => unsubscribe()
   }, [])
+
+  const handleLogout = () => {
+    localStorage.removeItem('nexusiq_user')
+    setUser(null)
+  }
 
   const fetchGraph = async () => {
     try {
@@ -62,7 +72,7 @@ export default function App() {
     <BrowserRouter>
       <div className={`min-h-screen bg-nexus-900 text-white flex flex-col font-sans transition-opacity duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
         <Canvas3D />
-        <Header stats={stats} user={user} onLogout={() => setUser(null)} API={API} />
+        <Header stats={stats} user={user} onLogout={handleLogout} API={API} />
         <Routes>
           <Route path="/" element={<LandingPage user={user} />} />
           <Route path="/login" element={<LoginPage user={user} onLoginSuccess={setUser} />} />
