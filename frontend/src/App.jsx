@@ -48,18 +48,14 @@ export default function App() {
       if (firebaseUser) {
         const u = { email: firebaseUser.email, role: 'officer', uid: firebaseUser.uid }
         setUser(u)
-        localStorage.setItem('nexusiq_user', JSON.stringify(u))
-      } else {
-        // user signed out from another tab or session expired
-        setUser(null)
-        localStorage.removeItem('nexusiq_user')
+        try { localStorage.setItem('nexusiq_user', JSON.stringify(u)) } catch (e) {}
       }
     })
     return () => unsubscribe()
   }, [])
 
   const handleLogout = () => {
-    signOut(auth)
+    signOut(auth).catch(() => {})
     setUser(null)
     localStorage.removeItem('nexusiq_user')
   }
