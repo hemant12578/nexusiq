@@ -159,59 +159,39 @@ ${reportData.audit_verdict}
       </div>
 
 
-      <div className="flex gap-6 text-sm items-center">
+      <div className="flex gap-4 text-sm items-center">
         {location.pathname === "/workspace" && (
-          <div className="hidden lg:flex items-center gap-6">
-            {[
-              { label: 'Nodes', value: stats.total_nodes, color: 'text-purple-400', icon: Network },
-              { label: 'Edges', value: stats.total_edges, color: 'text-purple-400', icon: Layers },
-              { label: 'Docs', value: stats.documents_processed, color: 'text-purple-400', icon: Activity },
-              { label: 'Queries', value: stats.total_queries, color: 'text-cyan-400', icon: Cpu },
-            ].map((s) => (
-              <div key={s.label} className="text-center group cursor-default hover-pop">
-                <AnimatedNumber
-                  value={s.value}
-                  className={`${s.color} font-bold text-base stat-glow block`}
-                />
-                <div className="text-gray-500 text-[10px] uppercase tracking-widest group-hover:text-gray-400 transition-colors flex items-center justify-center gap-1">
-                  <s.icon className="w-3 h-3 text-purple-500/70" />
-                  <span>{s.label}</span>
-                </div>
-              </div>
-            ))}
-
-
+          <div className="flex items-center gap-3">
             <button
               onClick={handleExportAuditReport}
               disabled={downloadingReport}
-              className="px-3 py-1.5 rounded-xl bg-purple-950/60 hover:bg-purple-900/80 border border-purple-700/40 text-purple-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md shadow-purple-900/20 hover-lift"
+              className="px-3.5 py-1.5 rounded-xl bg-purple-950/60 hover:bg-purple-900/80 border border-purple-700/40 text-purple-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md shadow-purple-900/20 hover-lift"
               title="Download official compliance audit report"
             >
               <FileSpreadsheet className="w-3.5 h-3.5 text-purple-400" />
               <span>{downloadingReport ? "Generating..." : "Export Audit Brief"}</span>
             </button>
 
-
-            <div className="flex items-center gap-2 pl-4 border-l border-purple-900/30">
-              <div className="relative">
-                <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                <div className="absolute inset-0 w-2 h-2 rounded-full bg-emerald-400 animate-ping opacity-40" />
-              </div>
-              <div className="text-emerald-400 text-xs font-semibold tracking-wide flex items-center gap-1">
+            <div className="hidden xl:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/40 border border-emerald-500/30">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-emerald-300 text-xs font-semibold flex items-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5" />
                 <span>0% Hallucination</span>
-              </div>
+              </span>
             </div>
           </div>
         )}
 
-
-        <div className="pl-4 border-l border-purple-900/30">
+        <div className="pl-3 border-l border-purple-900/30">
           {user ? (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
               <div className="text-right">
-                <div className="text-xs font-semibold text-gray-200 truncate max-w-[140px]">{user?.email ? user.email.split("@")[0] : "Officer"}</div>
-                <div className="text-[10px] text-purple-400 font-medium uppercase tracking-wider">{user?.role || "officer"}</div>
+                <div className="text-xs font-semibold text-gray-200 truncate max-w-[130px]">
+                  {user?.email ? user.email.split("@")[0] : "Officer"}
+                </div>
+                <div className="text-[10px] text-purple-400 font-medium uppercase tracking-wider">
+                  {user?.role || "officer"}
+                </div>
               </div>
               <button
                 onClick={() => { signOut(auth); onLogout(); navigate('/'); }}
