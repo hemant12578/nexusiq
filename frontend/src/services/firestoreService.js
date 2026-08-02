@@ -3,6 +3,25 @@ import { collection, addDoc, getDocs, getDoc, query, where, orderBy, limit, serv
 
 // Save user query and AI response to history
 export async function saveQueryHistory(uid, questionText, answerText, sources) {
+  const item = {
+    id: 'q_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+    uid: uid || 'anonymous',
+    question: questionText,
+    answer: answerText,
+    sources: sources || [],
+    timestamp: new Date().toISOString()
+  }
+
+  // Dual-write to localStorage for instant offline/offline demo persistence
+  try {
+    const key = `nexusiq_queries_${uid || 'anon'}`
+    const existing = JSON.parse(localStorage.getItem(key) || '[]')
+    const updated = [item, ...existing.filter(q => q.question !== questionText)].slice(0, 50)
+    localStorage.setItem(key, JSON.stringify(updated))
+  } catch (e) {
+    console.error('LocalStorage query save error:', e)
+  }
+
   if (!uid) return
   try {
     await addDoc(collection(db, 'query_history'), {
@@ -13,13 +32,20 @@ export async function saveQueryHistory(uid, questionText, answerText, sources) {
       timestamp: serverTimestamp()
     })
   } catch (e) {
-    console.error('failed to save query:', e)
+    console.warn('Firestore query save fallback to local:', e)
   }
 }
 
 // Retrieve recent query history for user
 export async function getQueryHistory(uid, max = 20) {
-  if (!uid) return []
+  const targetUid = uid || 'anon'
+  let localItems = []
+  try {
+    localItems = JSON.parse(localStorage.getItem(`nexusiq_queries_${targetUid}`) || '[]')
+  } catch (e) {}
+
+  if (!uid) return localItems.slice(0, max)
+
   try {
     const q = query(
       collection(db, 'query_history'),
@@ -28,15 +54,36 @@ export async function getQueryHistory(uid, max = 20) {
       limit(max)
     )
     const snap = await getDocs(q)
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+    const remoteItems = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+    if (remoteItems.length > 0) return remoteItems
   } catch (e) {
-    console.error('failed to load history:', e)
-    return []
+    console.warn('Firestore index or query unavailable, using local history fallback:', e)
   }
+  return localItems.slice(0, max)
 }
 
 // Log document upload activity
 export async function saveUploadRecord(uid, filename, type, entitiesFound, relationshipsFound) {
+  const item = {
+    id: 'u_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+    uid: uid || 'anonymous',
+    filename,
+    type,
+    entitiesFound,
+    relationshipsFound,
+    timestamp: new Date().toISOString()
+  }
+
+  // Dual-write to localStorage
+  try {
+    const key = `nexusiq_uploads_${uid || 'anon'}`
+    const existing = JSON.parse(localStorage.getItem(key) || '[]')
+    const updated = [item, ...existing.filter(u => u.filename !== filename)].slice(0, 50)
+    localStorage.setItem(key, JSON.stringify(updated))
+  } catch (e) {
+    console.error('LocalStorage upload save error:', e)
+  }
+
   if (!uid) return
   try {
     await addDoc(collection(db, 'upload_history'), {
@@ -48,13 +95,20 @@ export async function saveUploadRecord(uid, filename, type, entitiesFound, relat
       timestamp: serverTimestamp()
     })
   } catch (e) {
-    console.error('failed to save upload:', e)
+    console.warn('Firestore upload save fallback to local:', e)
   }
 }
 
 // Retrieve recent uploads for user
 export async function getUploadHistory(uid, max = 50) {
-  if (!uid) return []
+  const targetUid = uid || 'anon'
+  let localItems = []
+  try {
+    localItems = JSON.parse(localStorage.getItem(`nexusiq_uploads_${targetUid}`) || '[]')
+  } catch (e) {}
+
+  if (!uid) return localItems.slice(0, max)
+
   try {
     const q = query(
       collection(db, 'upload_history'),
@@ -63,11 +117,21 @@ export async function getUploadHistory(uid, max = 50) {
       limit(max)
     )
     const snap = await getDocs(q)
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+    const remoteItems = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+    if (remoteItems.length > 0) return remoteItems
   } catch (e) {
-    console.error('failed to load uploads:', e)
-    return []
+    console.warn('Firestore upload history index unavailable, using local fallback:', e)
   }
+  return localItems.slice(0, max)
+}
+
+// Clear user history
+export function clearUserHistory(uid) {
+  const targetUid = uid || 'anon'
+  try {
+    localStorage.removeItem(`nexusiq_queries_${targetUid}`)
+    localStorage.removeItem(`nexusiq_uploads_${targetUid}`)
+  } catch (e) {}
 }
 
 // Update user profile data
@@ -105,7 +169,6 @@ export async function saveSubscription(uid, plan, paymentId, orderId) {
 export async function getSubscription(uid) {
   if (!uid) return null
   try {
-    const snap = await getDocs(query(collection(db, 'subscriptions'), where('uid', '==', uid)))
     const docSnap = await getDoc(doc(db, 'subscriptions', uid))
     if (docSnap.exists()) return docSnap.data()
     return null
