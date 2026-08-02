@@ -1,6 +1,31 @@
 import { useEffect, useState } from "react"
 import { Activity, Database, Layers, FolderCheck, ShieldCheck, Gauge } from "lucide-react"
 
+function AnimatedNumber({ value }) {
+  const [display, setDisplay] = useState(0)
+
+  useEffect(() => {
+    if (value === 0) {
+      setDisplay(0)
+      return
+    }
+    let start = 0
+    const step = Math.max(1, Math.ceil(value / 20))
+    const timer = setInterval(() => {
+      start += step
+      if (start >= value) {
+        setDisplay(value)
+        clearInterval(timer)
+      } else {
+        setDisplay(start)
+      }
+    }, 50)
+    return () => clearInterval(timer)
+  }, [value])
+
+  return <span>{display}</span>
+}
+
 export default function StatsBar({ stats }) {
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
@@ -8,38 +33,44 @@ export default function StatsBar({ stats }) {
   const complianceScore = stats.compliance_score || 98.4
   const riskLevel = stats.risk_level || "LOW"
 
-  const items = [
-    { icon: Activity, text: "System Active & Synchronized", pulse: true },
-    { icon: Database, text: `${stats.total_nodes} entities tracked` },
-    { icon: Layers, text: `${stats.total_edges} relationships mapped` },
-    { icon: FolderCheck, text: `${stats.documents_processed} documents processed` },
-    { icon: Activity, text: `${stats.total_queries || 0} queries served` },
-    { icon: ShieldCheck, text: `${stats.hallucination_rate?.toFixed(1) || '0.0'}% hallucination rate` },
-  ]
-
   return (
     <div className={`scan-line bg-purple-950/20 border-b border-purple-900/20 px-6 py-2 flex items-center justify-between gap-6 text-xs text-gray-400 font-light transition-all duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
       <div className="flex gap-6 items-center">
-        {items.map((item, i) => (
-          <span
-            key={i}
-            className="flex items-center gap-1.5 transition-all duration-300 hover:text-gray-200"
-          >
-            {item.pulse ? (
-              <span className="relative flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                <span className="absolute w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping opacity-50" />
-              </span>
-            ) : (
-              <item.icon className="w-3.5 h-3.5 text-purple-400" />
-            )}
-            <span>{item.text}</span>
+        <span className="flex items-center gap-1.5 transition-all duration-300 hover:text-gray-200">
+          <span className="relative flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <span className="absolute w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping opacity-50" />
           </span>
-        ))}
+          <span>System Active &amp; Synchronized</span>
+        </span>
+
+        <span className="flex items-center gap-1.5 transition-all duration-300 hover:text-gray-200">
+          <Database className="w-3.5 h-3.5 text-purple-400" />
+          <span><AnimatedNumber value={stats.total_nodes} /> entities tracked</span>
+        </span>
+
+        <span className="flex items-center gap-1.5 transition-all duration-300 hover:text-gray-200">
+          <Layers className="w-3.5 h-3.5 text-purple-400" />
+          <span><AnimatedNumber value={stats.total_edges} /> relationships mapped</span>
+        </span>
+
+        <span className="flex items-center gap-1.5 transition-all duration-300 hover:text-gray-200">
+          <FolderCheck className="w-3.5 h-3.5 text-purple-400" />
+          <span><AnimatedNumber value={stats.documents_processed} /> documents processed</span>
+        </span>
+
+        <span className="flex items-center gap-1.5 transition-all duration-300 hover:text-gray-200">
+          <Activity className="w-3.5 h-3.5 text-purple-400" />
+          <span><AnimatedNumber value={stats.total_queries || 0} /> queries served</span>
+        </span>
+
+        <span className="flex items-center gap-1.5 transition-all duration-300 hover:text-gray-200">
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+          <span>{stats.hallucination_rate?.toFixed(1) || '0.0'}% hallucination rate</span>
+        </span>
       </div>
 
       <div className="flex items-center gap-4">
-
         <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-purple-950/60 border border-purple-800/40 text-[11px]">
           <Gauge className="w-3 h-3 text-cyan-400" />
           <span className="text-gray-400 font-medium">Compliance Readiness:</span>

@@ -1,10 +1,13 @@
 import { useState } from "react"
 import { ShieldCheck, Lock, User, KeyRound, Fingerprint, CheckCircle2, Building2, Sparkles, ArrowRight } from "lucide-react"
 import { auth, signInWithEmailAndPassword } from "../firebase"
-import { useNavigate, Link } from "react-router-dom"
+import { useNavigate, Link, Navigate } from "react-router-dom"
 import { saveUserProfile } from "../services/firestoreService"
 
-export default function LoginPage({ onLoginSuccess }) {
+export default function LoginPage({ onLoginSuccess, user }) {
+  if (user) {
+    return <Navigate to="/workspace" replace />
+  }
   const navigate = useNavigate()
   const [role, setRole] = useState("officer")
   const [email, setEmail] = useState("compliance.officer@nexusiq.enterprise")

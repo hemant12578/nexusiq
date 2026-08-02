@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { Cpu, Layers, Network, Activity, ShieldCheck, Lock, Globe, FolderKanban, LogOut, FileSpreadsheet, Sparkles } from "lucide-react"
 import axios from "axios"
+import { auth, signOut } from "../firebase"
 
 function AnimatedNumber({ value, className }) {
   const [display, setDisplay] = useState(value)
@@ -213,7 +214,7 @@ ${reportData.audit_verdict}
                 <div className="text-[10px] text-purple-400 font-medium uppercase tracking-wider">{user.role}</div>
               </div>
               <button
-                onClick={() => { onLogout(); navigate('/'); }}
+                onClick={() => { signOut(auth); onLogout(); navigate('/'); }}
                 title="Logout"
                 className="p-2 rounded-lg bg-nexus-800/80 hover:bg-red-950/40 text-gray-400 hover:text-red-400 border border-purple-900/30 hover:border-red-900/40 transition-all hover-pop"
               >

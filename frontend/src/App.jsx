@@ -64,8 +64,8 @@ export default function App() {
         <Canvas3D />
         <Header stats={stats} user={user} onLogout={() => setUser(null)} API={API} />
         <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<LoginPage onLoginSuccess={setUser} />} />
+          <Route path="/" element={<LandingPage user={user} />} />
+          <Route path="/login" element={<LoginPage user={user} onLoginSuccess={setUser} />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/architecture" element={<ArchitecturePage />} />
           <Route path="/pricing" element={<PricingPage />} />

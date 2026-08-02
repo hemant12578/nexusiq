@@ -24,7 +24,7 @@ import {
   Globe
 } from "lucide-react"
 
-export default function LandingPage() {
+export default function LandingPage({ user }) {
   const [activeTab, setActiveTab] = useState("pdf")
   const [openFaq, setOpenFaq] = useState(null)
 
@@ -95,17 +95,19 @@ export default function LandingPage() {
             to="/workspace"
             className="px-8 py-4 bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl font-bold text-sm shadow-xl shadow-purple-700/30 transition-all hover-lift flex items-center gap-2.5 group"
           >
-            <span>Open workspace</span>
+            <span>{user ? "Enter workspace" : "Open workspace"}</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
 
-          <Link
-            to="/login"
-            className="px-8 py-4 bg-nexus-800/80 hover:bg-nexus-700/80 border border-purple-900/50 hover:border-purple-600/50 rounded-xl font-bold text-sm text-gray-300 transition-all hover-lift flex items-center gap-2"
-          >
-            <Lock className="w-4 h-4 text-purple-400" />
-            <span>Sign in</span>
-          </Link>
+          {!user && (
+            <Link
+              to="/login"
+              className="px-8 py-4 bg-nexus-800/80 hover:bg-nexus-700/80 border border-purple-900/50 hover:border-purple-600/50 rounded-xl font-bold text-sm text-gray-300 transition-all hover-lift flex items-center gap-2"
+            >
+              <Lock className="w-4 h-4 text-purple-400" />
+              <span>Sign in</span>
+            </Link>
+          )}
 
           <Link
             to="/pricing"
