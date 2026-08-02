@@ -341,10 +341,10 @@ export default function PricingPage({ user }) {
                       <Loader2 className="w-4 h-4 animate-spin text-purple-300" />
                       <span>Initializing...</span>
                     </>
-                  ) : (!user || !user.email) && plan.priceInPaise > 0 ? (
+                  ) : (!user || !user.email) ? (
                     <>
                       <Lock className="w-4 h-4 text-purple-300" />
-                      <span>Sign in to Subscribe</span>
+                      <span>Sign in first</span>
                     </>
                   ) : (
                     <>
