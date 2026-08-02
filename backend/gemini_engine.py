@@ -173,7 +173,7 @@ def generate_text_response(prompt: str) -> str:
     return call_openrouter_free(prompt)
 
 def fallback_extract_entities(text: str, filename: str) -> dict:
-    """Zero-fail local entity extractor for live demos when external AI APIs are rate-limited or keyless"""
+    """Rich zero-fail local entity extractor for live demos when external AI APIs are rate-limited or keyless"""
     entities = []
     relationships = []
     
@@ -186,40 +186,56 @@ def fallback_extract_entities(text: str, filename: str) -> dict:
         "type": "document"
     })
     
-    # Extract standards & policies
-    policies = re.findall(r'(ISO\s*\d+(?:\.\d+)*|NIST\s*SP\s*\d+-\d+|HIPAA|PCI\s*DSS|GDPR|SOC\s*2)', text, re.IGNORECASE)
+    # 1. Extract standards & policies (e.g. ISO 27001, NIST, HIPAA, SOC 2, GDPR)
+    policies = re.findall(r'(ISO\s*\d+(?:\.\d+)*|NIST\s*SP\s*\d+-\d+|HIPAA|PCI\s*DSS|GDPR|SOC\s*2|IEEE\s*\d+|Compliance\s*Policy|Security\s*Policy)', text, re.IGNORECASE)
     for p in set(policies):
         p_id = f"policy_{re.sub(r'[^a-zA-Z0-9]', '_', p.lower())}"
         entities.append({"id": p_id, "name": p.upper(), "type": "policy"})
         relationships.append({"from": doc_node_id, "to": p_id, "relation": "references policy"})
         
-    # Extract hardware devices & edge nodes
-    devices = re.findall(r'(ESP32[a-zA-Z0-9_]*|RPi[a-zA-Z0-9_]*|Raspberry\s*Pi|Sensor|ThermalSensor|BadgeScanner|FireSystem|USBMonitor)', text, re.IGNORECASE)
+    # 2. Extract hardware devices, edge nodes & infrastructure
+    devices = re.findall(r'(ESP32[a-zA-Z0-9_]*|RPi[a-zA-Z0-9_]*|Raspberry\s*Pi|Sensor|ThermalSensor|BadgeScanner|FireSystem|USBMonitor|Server\s*Room|Data\s*Center|Rack\s*B\d+|Perimeter\s*Firewall)', text, re.IGNORECASE)
     for d in set(devices):
         d_id = f"device_{re.sub(r'[^a-zA-Z0-9]', '_', d.lower())}"
-        entities.append({"id": d_id, "name": d, "type": "organization"})
-        relationships.append({"from": doc_node_id, "to": d_id, "relation": "originates from"})
+        entities.append({"id": d_id, "name": d.title(), "type": "organization"})
+        relationships.append({"from": doc_node_id, "to": d_id, "relation": "monitored by"})
         
-    # Extract personnel & roles
-    roles = re.findall(r'(CISO|Employee|Auditor|Officer|Contractor|Admin)', text, re.IGNORECASE)
+    # 3. Extract personnel, roles & stakeholders
+    roles = re.findall(r'(CISO|Compliance\s*Officer|Security\s*Lead|Auditor|Officer|Contractor|Admin|System\s*Administrator|Employee|Visitor)', text, re.IGNORECASE)
     for r in set(roles):
-        r_id = f"person_{r.lower()}"
-        entities.append({"id": r_id, "name": r, "type": "person"})
+        r_id = f"person_{re.sub(r'[^a-zA-Z0-9]', '_', r.lower())}"
+        entities.append({"id": r_id, "name": r.title(), "type": "person"})
         relationships.append({"from": doc_node_id, "to": r_id, "relation": "escalated to"})
-        
-    # Fallback generic event node if no match
-    if len(entities) == 1:
-        evt_id = f"event_{int(time.time())}"
-        entities.append({
-            "id": evt_id,
-            "name": text[:40] + "..." if len(text) > 40 else text,
-            "type": "event"
-        })
-        relationships.append({
-            "from": doc_node_id,
-            "to": evt_id,
-            "relation": "contains event"
-        })
+
+    # 4. Extract dates, timelines & rounds (e.g. Round 1, 2026, Q3, 16-char)
+    dates = re.findall(r'(Round\s*\d+|20\d\d|Quarter\s*\d|Q[1-4]|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)', text, re.IGNORECASE)
+    for d in set(dates):
+        dt_id = f"date_{re.sub(r'[^a-zA-Z0-9]', '_', d.lower())}"
+        entities.append({"id": dt_id, "name": d.title(), "type": "date"})
+        relationships.append({"from": doc_node_id, "to": dt_id, "relation": "scheduled for"})
+
+    # 5. Extract key requirements & events (lines with must, shall, require, or bullet points)
+    lines = [line.strip() for line in text.split('\n') if len(line.strip()) > 15]
+    event_count = 0
+    for idx, line in enumerate(lines[:8]):
+        # Extract title-like phrases or requirement clauses
+        clean_line = re.sub(r'^\d+[\.\)]\s*', '', line)
+        if len(clean_line) > 10:
+            e_id = f"event_{clean_fn}_{idx}"
+            short_name = clean_line[:45] + "..." if len(clean_line) > 45 else clean_line
+            entities.append({
+                "id": e_id,
+                "name": short_name,
+                "type": "event"
+            })
+            relationships.append({
+                "from": doc_node_id,
+                "to": e_id,
+                "relation": "contains requirement"
+            })
+            event_count += 1
+            if event_count >= 5:
+                break
 
     return {
         "success": True,

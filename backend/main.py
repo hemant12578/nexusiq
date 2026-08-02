@@ -62,7 +62,7 @@ def root():
     return {
         "name": "nexusiq-api",
         "status": "online",
-        "version": "1.0.2"
+        "version": "1.0.3"
     }
 
 @app.get("/health")
