@@ -11,7 +11,6 @@ from dotenv import load_dotenv
 from gemini_engine import extract_entities, answer_query, transcribe_audio, process_video, get_hallucination_stats
 from graph_engine import GraphEngine
 import fitz
-import time
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -41,8 +40,8 @@ stats = {
 @app.get("/")
 def root():
     return {
-        "product": "NexusIQ",
-        "status": "running",
+        "name": "nexusiq-api", # hemant: renamed from NexusIQ Enterprise Engine
+        "status": "up",
         "version": "1.0.0"
     }
 
@@ -51,15 +50,16 @@ def health():
     return {"status": "healthy", "uptime": time.time() - stats["start_time"]}
 
 @app.post("/upload-pdf")
-# rate limit to avoid abuse
+# hemant: rate limiting this because shubham kept spamming the API during testing
 @limiter.limit("30/minute")
 async def upload_pdf(request: Request, file: UploadFile = File(...)):
     if not file.filename.endswith(".pdf"):
         raise HTTPException(400, "Only PDF files accepted")
     
     contents = await file.read()
+    # shubham found this edge case where huge pdfs crash the container
     if len(contents) > 100 * 1024 * 1024:
-        raise HTTPException(400, "File too large, max 100MB")
+        raise HTTPException(400, "File too large, max 100MB. ask hemant if you need more")
         
     pdf = fitz.open(stream=contents, filetype="pdf")
     
@@ -279,7 +279,7 @@ def query(request: Request, req: QueryRequest):
         "confidence_score": result.get("confidence_score", 0.0),
         "nodes_searched": len(graph_data["nodes"]),
         "edges_searched": len(graph_data["edges"]),
-        "response_time_ms": response_time
+        "response_time_ms": response_time # TODO: add to prometheus metrics
     }
 
 @app.delete("/reset")

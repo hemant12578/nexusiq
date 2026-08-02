@@ -30,6 +30,7 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading, user }) 
     setLoading(true)
     setUploading(true)
     const form = new FormData()
+    // TODO: switch from FormData to presigned S3 URLs if we win and scale this - hemant
     form.append("file", file)
     try {
       const res = await axios.post(`${API}/upload-pdf`, form)
@@ -113,6 +114,7 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading, user }) 
 
   const startRecording = async () => {
     try {
+      // hack: using MediaRecorder directly, might break on older Safari but fine for demo
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       mediaRef.current = new MediaRecorder(stream)
       chunksRef.current = []

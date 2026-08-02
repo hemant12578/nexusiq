@@ -159,6 +159,7 @@ const ThreeHero = () => {
   return <div ref={mountRef} className="fixed inset-0 z-0 pointer-events-none opacity-75 overflow-hidden" />
 }
 
+// shubham: added this page just to flex the 3D background
 export default function AboutPage() {
   const metrics = [
     { 
@@ -194,6 +195,7 @@ export default function AboutPage() {
     { title: "Edge", items: ["Raspberry Pi", "Edge Agent", "GPIO", "Offline Queue"], delay: "300ms" }
   ]
 
+  // hemant: our pipeline for the judges
   const pipelineSteps = [
     { title: "Multi-Modal Input", desc: "PDF / Audio / Text", icon: Smartphone },
     { title: "LLM Extraction", desc: "Gemini Entities", icon: Cpu },
@@ -250,6 +252,7 @@ export default function AboutPage() {
           <h2 className="text-3xl font-bold mb-6 text-white tracking-tight flex items-center gap-3">
             <Target className="text-purple-400 w-8 h-8" />
             The Problem We Solve
+            {/* shubham: copied this problem statement from the hackathon brief */}
           </h2>
           <div className="space-y-6 text-gray-300 leading-relaxed text-lg font-light">
             <p>

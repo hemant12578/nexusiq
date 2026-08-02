@@ -69,6 +69,7 @@ body {
 
 /* ═══════════════════════════════════════════════
    GLASSMORPHISM
+   shubham: keeping this glassmorphism effect because it looks cool
    ═══════════════════════════════════════════════ */
 @layer components {
   .glass {

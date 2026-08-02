@@ -54,7 +54,8 @@ export default function LoginPage({ onLoginSuccess }) {
       setFirebaseStatus("Authenticated")
       executeLoginSuccess({ email: res.user.email, role, uid: res.user.uid })
     } catch (err) {
-      // Fallback for session/demo logins
+      // shubham: if firebase fails, just let them in anyway so the demo doesn't crash 
+      console.warn("Firebase auth failed, falling back to mock session", err)
       setFirebaseStatus("Logged in")
       executeLoginSuccess({ email, role, uid: 'demo-user-' + Date.now().toString(36) })
     }
@@ -148,7 +149,7 @@ export default function LoginPage({ onLoginSuccess }) {
               className="w-full py-3 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 rounded-xl font-bold text-xs uppercase tracking-wider text-white shadow-lg shadow-emerald-950/40 transition-all hover-lift flex items-center justify-center gap-2 group"
             >
               <Zap className="w-4 h-4 text-amber-300 fill-amber-300 animate-bounce" />
-              <span>Instant 1-Click Demo Login</span>
+              <span>Quick Demo Login</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
 

@@ -56,10 +56,10 @@ Overall Compliance Readiness Score: ${reportData.overall_compliance_score} (${re
 ## Top Critical Compliance Entities
 ${reportData.top_critical_entities.map((e, idx) => `${idx + 1}. **${e.name}** (${e.type}) — Connections: ${e.connections}, Centrality Score: ${e.importance_score}`).join('\n') || 'No entities mapped yet.'}
 
-## Zero-Hallucination Audit Verdict
+## Audit Verdict
 ${reportData.audit_verdict}
 `
-
+      // hemant: making a fake blob download instead of a real PDF for now
       const blob = new Blob([markdownContent], { type: 'text/markdown;charset=utf-8;' })
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
@@ -82,9 +82,8 @@ ${reportData.audit_verdict}
           to="/"
           className="flex items-center gap-3 group cursor-pointer"
         >
-          <div className="w-10 h-10 bg-gradient-to-br from-purple-600 via-violet-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-600/30 animate-glow-pulse group-hover:scale-105 transition-transform duration-300 relative">
-            <Cpu className="w-5 h-5 text-white relative z-10" />
-            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-purple-600 via-violet-500 to-indigo-600 blur-md opacity-40 group-hover:opacity-70 transition-opacity" />
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-purple-600/30 group-hover:scale-105 transition-transform duration-300 overflow-hidden">
+            <img src="/nexusiq-logo.jpg" alt="NexusIQ" className="w-full h-full object-cover rounded-xl" />
           </div>
           <div>
             <div className="font-extrabold text-lg tracking-tight gradient-text">NexusIQ</div>
@@ -176,7 +175,8 @@ ${reportData.audit_verdict}
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-emerald-300 text-xs font-semibold flex items-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                <span>0% Hallucination</span>
+                {/* shubham wanted this badge to look cool */}
+                <span>System Secure</span>
               </span>
             </div>
           </div>

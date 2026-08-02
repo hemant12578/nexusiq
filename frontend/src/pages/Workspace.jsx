@@ -11,6 +11,7 @@ export default function Workspace({ API, graphData, stats, loading, setLoading, 
   const [rpiSending, setRpiSending] = useState(false)
   const [rpiToast, setRpiToast] = useState(null)
 
+  // shubham: this simulates the raspberry pi sending an incident log to our backend
   const sendRPiIncident = async () => {
     setRpiSending(true)
     setLoading(true)
@@ -91,6 +92,7 @@ export default function Workspace({ API, graphData, stats, loading, setLoading, 
           />
 
 
+          {/* show empty state if no nodes */}
           {graphData.nodes.length === 0 && !loading && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="text-center space-y-5 animate-float pointer-events-auto max-w-md p-8 rounded-3xl bg-nexus-800/40 backdrop-blur-xl border border-purple-900/30 glow-border">

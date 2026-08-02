@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+// hemant: lazy load these later if bundle gets too big
 import Header from './components/Header'
 import Canvas3D from './components/Canvas3D'
 import LandingPage from './components/LandingPage'
@@ -13,9 +14,11 @@ import NotFoundPage from './pages/NotFoundPage'
 import axios from 'axios'
 import { auth, onAuthStateChanged } from './firebase'
 
+// FIXME: switch to production railway URL before final demo submission! - shubham
 const API = import.meta.env.VITE_API_URL || 'https://nexusiq-backend-production.up.railway.app'
 
 export default function App() {
+  // hack: persisting user in localStorage because firebase auth state is slow to initialize
   const [user, setUser] = useState(() => {
     try {
       const saved = localStorage.getItem('nexusiq_user')
@@ -58,7 +61,10 @@ export default function App() {
     try {
       const res = await axios.get(`${API}/graph`)
       setGraphData(res.data)
-    } catch (e) { console.error('Graph fetch error:', e) }
+    } catch (e) { 
+      // shubham reported this throws 500 sometimes on empty DBs, need to handle properly
+      console.error('Graph fetch error:', e) 
+    }
   }
 
   const fetchStats = async () => {

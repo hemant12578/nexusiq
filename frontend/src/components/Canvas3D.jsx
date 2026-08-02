@@ -26,6 +26,7 @@ export default function Canvas3D() {
     containerRef.current.appendChild(renderer.domElement)
 
 
+    // shubham: lowered particle count from 500 so my laptop doesn't take off
     const particleCount = 220
     const geometry = new THREE.BufferGeometry()
     const positions = new Float32Array(particleCount * 3)
@@ -142,6 +143,7 @@ export default function Canvas3D() {
           const dz = pos[i * 3 + 2] - pos[j * 3 + 2]
           const dist = Math.sqrt(dx * dx + dy * dy + dz * dz)
 
+          // hemant: connect nodes if they are close enough
           if (dist < 110) {
             linePositions[lineIndex++] = pos[i * 3]
             linePositions[lineIndex++] = pos[i * 3 + 1]

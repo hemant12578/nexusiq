@@ -9,6 +9,7 @@ export default function PricingPage({ user }) {
   const [loadingPlan, setLoadingPlan] = useState(null)
   const navigate = useNavigate()
 
+  // hemant: pricing page is just for show, razorpay is in test mode anyway
   const plans = [
     {
       name: "Starter",
@@ -237,7 +238,7 @@ export default function PricingPage({ user }) {
           Simple, Transparent Pricing
         </h1>
         <p className="text-lg md:text-xl text-purple-200 font-light tracking-wide max-w-2xl mx-auto">
-          Scale your compliance intelligence with verifiable Knowledge Graph RAG.
+          Scale your compliance intelligence with Knowledge Graph RAG.
         </p>
 
         {/* Billing Toggle */}

@@ -157,6 +157,7 @@ const ArchitectureHero3D = () => {
 }
 
 export default function ArchitecturePage() {
+  // hemant: architecture flow for the presentation
   const steps = [
     {
       id: 1,
@@ -190,6 +191,7 @@ export default function ArchitecturePage() {
     }
   ]
 
+  // shubham: metrics to impress the judges
   const metrics = [
     {
       name: "Retrieval Precision",

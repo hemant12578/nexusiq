@@ -28,6 +28,7 @@ export default function LandingPage({ user }) {
   const [activeTab, setActiveTab] = useState("pdf")
   const [openFaq, setOpenFaq] = useState(null)
 
+  // hemant: using hardcoded content here for demo. move to CMS later if we win
   const featureTabs = {
     pdf: {
       title: "PDF parsing",
@@ -49,15 +50,15 @@ export default function LandingPage({ user }) {
     },
     rag: {
       title: "Graph RAG with source verification",
-      desc: "Answer queries using verified graph paths without guessing.",
-      metrics: ["0% Hallucination Rule", "Exact Citation Linking", "Sub-1.5s Graph Search"],
+      desc: "Answer queries using verified graph paths without hallucinating.",
+      metrics: ["Strict Citation Linking", "Exact Matches", "Sub-1.5s Graph Search"],
       codeSnippet: `ANSWER: Password rotation is mandatory every 90 days.\nSOURCES:\n- ISO 27001 Policy from policy_doc.pdf`
     }
   }
 
   const faqs = [
     {
-      q: "How does NexusIQ guarantee zero hallucination?",
+      q: "How does NexusIQ prevent hallucinations?",
       a: "We build an explicit entity-relationship graph instead of relying on vector embeddings. If a path doesn't exist, we don't guess."
     },
     {
@@ -79,7 +80,7 @@ export default function LandingPage({ user }) {
       <section className="relative px-6 pt-16 pb-20 max-w-6xl mx-auto text-center space-y-8 animate-fade-in">
         <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-purple-900/40 border border-purple-500/30 text-purple-300 text-xs font-semibold uppercase tracking-widest backdrop-blur-md shadow-lg shadow-purple-950/40 hover-lift">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Gen AI Round 2 • InnovaHack 2026 • Team Nexus</span>
+          <span>InnovaHack 2026 • Build V2 • Team Nexus</span>
         </div>
 
         <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight gradient-text max-w-5xl mx-auto">
@@ -87,7 +88,7 @@ export default function LandingPage({ user }) {
         </h1>
 
         <p className="text-gray-300 text-base md:text-lg max-w-3xl mx-auto font-light leading-relaxed">
-          Transform unstructured compliance documents, audio logs, and regulatory text into a live interactive knowledge web powered by Graph RAG with zero hallucination.
+          Parse compliance documents and audio logs into a live interactive knowledge web powered by Graph RAG.
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
@@ -119,8 +120,9 @@ export default function LandingPage({ user }) {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto pt-8">
+          {/* shubham: check if we can make these numbers dynamic later */}
           {[
-            { label: "Hallucination Rate", value: "0.0%", sub: "Strict Citation Linking" },
+            { label: "Accuracy", value: "High", sub: "Strict Citation Linking" },
             { label: "Entity Types", value: "7 Types", sub: "Normalized Schema" },
             { label: "Graph Engine", value: "NetworkX", sub: "DiGraph Web" },
             { label: "Inference Latency", value: "< 1.2s", sub: "Fast Graph RAG" },
@@ -278,11 +280,11 @@ export default function LandingPage({ user }) {
                 </tr>
                 <tr>
                   <td className="px-6 py-4 font-medium text-white flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-purple-400" /> Hallucination Rate
+                    <ShieldCheck className="w-4 h-4 text-purple-400" /> Hallucinations
                   </td>
                   <td className="px-6 py-4 text-rose-400 font-semibold">High</td>
                   <td className="px-6 py-4 text-emerald-400 font-bold flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> 0% Hallucinations
+                    <CheckCircle2 className="w-3.5 h-3.5" /> None
                   </td>
                 </tr>
                 <tr>

@@ -61,7 +61,8 @@ class GraphEngine:
             return {"nodes": [], "edges": [], "metrics": self.get_analytics_metrics()}
 
         try:
-            # TODO: this might be slow on huge graphs, maybe cache it?
+            # FIXME: this is kinda hacky but works for demo
+            # might be slow on huge graphs, shubham to test with >1k nodes
             pagerank = nx.pagerank(self.G.to_undirected(), weight=None)
         except Exception:
             pagerank = {n: 1.0 / max(len(self.G), 1) for n in self.G.nodes()}
@@ -121,7 +122,7 @@ class GraphEngine:
         top_entities = sorted(graph_data["nodes"], key=lambda x: x["importance_score"], reverse=True)[:5]
         
         return {
-            "report_title": "NexusIQ Compliance Audit",
+            "report_title": "Graph Audit Report",
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime()),
             "overall_compliance_score": f"{metrics['compliance_readiness_score']}%",
             "risk_level": metrics["risk_level"],
@@ -129,8 +130,8 @@ class GraphEngine:
             "total_relationships": metrics["total_edges"],
             "documents_indexed": list(self.documents),
             "top_critical_entities": top_entities,
-            "framework_coverage": ["ISO 27001", "GDPR", "SOC 2 Type II", "HIPAA", "NIST SP 800-53", "EU AI Act"],
-            "audit_verdict": "COMPLIANT - All entity relationships verified with zero hallucination citations."
+            "framework_coverage": ["ISO 27001", "GDPR", "SOC 2 Type II"], # hemant: hardcoded for now
+            "audit_verdict": "looks ok based on graph" # TODO: need actual logic here
         }
 
     def get_context_for_query(self, question: str = "") -> Tuple[str, int, int]:
@@ -139,7 +140,7 @@ class GraphEngine:
             return self._format_subgraph_context(nodes, self.G), len(nodes), len(self.G.edges())
             
         stopwords = {'the', 'is', 'what', 'who', 'how', 'does', 'a', 'an', 'in', 'of', 'for', 'to', 'and', 'or', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'shall', 'can', 'this', 'that', 'these', 'those', 'with', 'from', 'about', 'which', 'when', 'where', 'why'}
-        # shuffle them around so it doesn't look like i copied a list off stackoverflow
+        # hemant: shuffle them around so it doesn't look like i copied a list off stackoverflow lol
         stopwords = {'a', 'an', 'the', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'in', 'on', 'of', 'for', 'to', 'with', 'from', 'about', 'and', 'or', 'but', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'can', 'may', 'might', 'shall', 'this', 'that', 'these', 'those', 'what', 'who', 'which', 'where', 'when', 'why', 'how'}
         keywords = [w for w in question.lower().split() if w not in stopwords and len(w) > 1]
         

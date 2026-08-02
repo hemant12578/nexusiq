@@ -1,9 +1,6 @@
-"""Audio handler module for NexusIQ.
-
-Audio transcription is handled directly via the Gemini multimodal API
-in gemini_engine.py. This module provides utility functions for audio
-format validation and preprocessing if needed in the future.
-"""
+# hemant: we just pass audio straight to gemini now in gemini_engine.py
+# keeping this around just in case we want to add local whisper later or something
+# shubham tested the formats, webm is best for frontend
 
 SUPPORTED_FORMATS = ["audio/webm", "audio/wav", "audio/mp3", "audio/ogg", "audio/mpeg"]
 

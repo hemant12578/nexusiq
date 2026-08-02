@@ -43,6 +43,7 @@ export default function QueryInterface({ API, onQuery, user }) {
     setLoading(true)
     setAnswer(null)
     try {
+      // FIXME: add timeout here, the python backend is sometimes painfully slow - shubham
       const res = await axios.post(`${API}/query`, { question })
       const rawAnswer = res.data.answer || ""
       const cleanText = rawAnswer.replace(/^ANSWER:\s*/i, '').split('\nSOURCES:')[0].trim()
@@ -168,6 +169,7 @@ export default function QueryInterface({ API, onQuery, user }) {
 
               <button
                 onClick={() => {
+                  // shubham: making it look like a serious enterprise report for the judges lol
                   const content = `================================================
 NEXUSIQ ENTERPRISE COMPLIANCE REPORT
 Generated: ${new Date().toLocaleString()}

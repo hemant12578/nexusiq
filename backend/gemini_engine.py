@@ -14,10 +14,11 @@ if GEMINI_KEY:
     genai.configure(api_key=GEMINI_KEY)
 
 # Primary Gemini Models
+# hemant: switched to gemini-2.5-flash for default, way faster
 GEMINI_MODELS = [
     "gemini-2.5-flash",
     "gemini-2.5-pro",
-    "gemini-2.0-flash",
+    "gemini-2.0-flash", # v2 approach - old one was too slow
 ]
 
 # OpenRouter Free Models
@@ -99,13 +100,13 @@ Return JSON:
 """
 
 VIDEO_PROMPT = """
-Analyze this compliance video recording. Transcribe the audio narration/speech and extract any compliance entities, policies, equipment names, or incidents mentioned in the video.
+Analyze this video. Transcribe the audio and pull out any entities, policies, or incidents mentioned.
 
 Return JSON:
 {
-  "transcript": "full transcribed text from speech/narration in the video",
+  "transcript": "full transcribed text",
   "entities": ["list", "of", "extracted", "entities"],
-  "summary": "brief summary of video content"
+  "summary": "brief summary"
 }
 """
 
@@ -144,7 +145,7 @@ def call_openrouter_free(prompt: str) -> str:
             if resp.status_code == 200:
                 content = resp.json()["choices"][0]["message"]["content"]
                 if content and content.strip():
-                    print(f"[OpenRouter Free] Responded using model: {model_name}")
+                    # print(f"[OpenRouter Free] Responded using model: {model_name}")
                     return content
             else:
                 last_error = f"HTTP {resp.status_code} ({model_name}): {resp.text}"

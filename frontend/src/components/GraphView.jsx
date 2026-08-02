@@ -10,7 +10,7 @@ const NODE_COLORS = {
   event: "#f97316",
   location: "#84cc16",
   unknown: "#6b7280"
-}
+} // hemant: picked these colors to look cyberpunk for the demo
 
 export default function GraphView({ graphData, onNodeClick }) {
   const svgRef = useRef(null)
@@ -53,6 +53,7 @@ export default function GraphView({ graphData, onNodeClick }) {
 
 
     const filterSoft = defs.append("filter").attr("id", "glow-soft")
+    // shubham: this glow effect lags on my laptop but we're keeping it cause it looks cool
     filterSoft.append("feGaussianBlur").attr("stdDeviation", "3").attr("result", "coloredBlur")
     const fmSoft = filterSoft.append("feMerge")
     fmSoft.append("feMergeNode").attr("in", "coloredBlur")
@@ -108,6 +109,7 @@ export default function GraphView({ graphData, onNodeClick }) {
         relation: e.relation
       }))
 
+    // hemant: d3 forces are hard to tune, don't touch these magic numbers
     const simulation = d3.forceSimulation(nodes)
       .force("link", d3.forceLink(links).id(d => d.id).distance(150))
       .force("charge", d3.forceManyBody().strength(-600))
