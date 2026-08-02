@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app"
 import { getAnalytics, isSupported } from "firebase/analytics"
-import { getAuth, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged } from "firebase/auth"
+import { getAuth, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, sendPasswordResetEmail, signOut, onAuthStateChanged } from "firebase/auth"
 import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, limit, serverTimestamp, doc, setDoc } from 'firebase/firestore'
 
 const firebaseConfig = {
@@ -39,6 +39,7 @@ export {
   googleProvider,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  signInWithPopup,
   sendPasswordResetEmail,
   signOut,
   onAuthStateChanged,

@@ -1,14 +1,14 @@
 import { useState } from "react"
-import { ShieldCheck, Lock, User, KeyRound, Fingerprint, CheckCircle2, Building2, Sparkles, ArrowRight, Mail, AlertCircle } from "lucide-react"
-import { auth, signInWithEmailAndPassword, sendPasswordResetEmail } from "../firebase"
-import { useNavigate, Link, Navigate } from "react-router-dom"
+import { ShieldCheck, Lock, User, KeyRound, Fingerprint, CheckCircle2, Building2, Sparkles, ArrowRight, Mail, AlertCircle, Zap } from "lucide-react"
+import { auth, signInWithEmailAndPassword, sendPasswordResetEmail, signInWithPopup, googleProvider } from "../firebase"
+import { useNavigate, Link } from "react-router-dom"
 import { saveUserProfile } from "../services/firestoreService"
 
 export default function LoginPage({ onLoginSuccess }) {
   const navigate = useNavigate()
   const [role, setRole] = useState("officer")
   const [email, setEmail] = useState("compliance.officer@nexusiq.enterprise")
-  const [password, setPassword] = useState("••••••••••••")
+  const [password, setPassword] = useState("password123")
   const [scanning, setScanning] = useState(false)
   const [authed, setAuthed] = useState(false)
   const [firebaseStatus, setFirebaseStatus] = useState("")
@@ -16,31 +16,49 @@ export default function LoginPage({ onLoginSuccess }) {
   const [resetError, setResetError] = useState("")
   const [resetLoading, setResetLoading] = useState(false)
 
+  const executeLoginSuccess = (userObj) => {
+    setScanning(false)
+    setAuthed(true)
+    setTimeout(() => {
+      saveUserProfile(userObj.uid, userObj.email, userObj.role)
+      try { localStorage.setItem('nexusiq_user', JSON.stringify(userObj)) } catch (e) {}
+      onLoginSuccess(userObj)
+      navigate("/workspace")
+    }, 700)
+  }
+
   const handleLogin = async (e) => {
     e.preventDefault()
     setScanning(true)
     setFirebaseStatus("")
 
     try {
-      // Attempt Firebase auth (if user credentials exist)
-      await signInWithEmailAndPassword(auth, email, password)
+      const res = await signInWithEmailAndPassword(auth, email, password)
       setFirebaseStatus("Authenticated")
+      executeLoginSuccess({ email: res.user.email, role, uid: res.user.uid })
     } catch (err) {
-      // Fall back to Enterprise Portal Session Auth
+      // Fallback for session/demo logins
       setFirebaseStatus("Logged in")
+      executeLoginSuccess({ email, role, uid: 'demo-user-' + Date.now().toString(36) })
     }
+  }
 
-    setTimeout(() => {
-      setScanning(false)
-      setAuthed(true)
-      setTimeout(() => {
-        const u = { email, role, uid: auth.currentUser?.uid || 'demo-user' }
-        saveUserProfile(u.uid, email, role)
-        try { localStorage.setItem('nexusiq_user', JSON.stringify(u)) } catch (e) {}
-        onLoginSuccess(u)
-        navigate("/workspace")
-      }, 700)
-    }, 1000)
+  const handleQuickDemo = () => {
+    setScanning(true)
+    setFirebaseStatus("Officer Demo")
+    executeLoginSuccess({ email: "compliance.officer@nexusiq.enterprise", role: "officer", uid: "demo-officer-uid" })
+  }
+
+  const handleGoogleLogin = async () => {
+    setScanning(true)
+    setFirebaseStatus("Google OAuth")
+    try {
+      const result = await signInWithPopup(auth, googleProvider)
+      executeLoginSuccess({ email: result.user.email, role: "officer", uid: result.user.uid })
+    } catch (err) {
+      setFirebaseStatus("Demo Session")
+      executeLoginSuccess({ email: "google.demo@nexusiq.enterprise", role: "officer", uid: "google-demo-uid" })
+    }
   }
 
   const roles = [
@@ -105,6 +123,38 @@ export default function LoginPage({ onLoginSuccess }) {
               <span>{resetError}</span>
             </div>
           )}
+
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={handleQuickDemo}
+              className="w-full py-3 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 rounded-xl font-bold text-xs uppercase tracking-wider text-white shadow-lg shadow-emerald-950/40 transition-all hover-lift flex items-center justify-center gap-2 group"
+            >
+              <Zap className="w-4 h-4 text-amber-300 fill-amber-300 animate-bounce" />
+              <span>Instant 1-Click Demo Login</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </button>
+
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              className="w-full py-2.5 bg-nexus-900/80 hover:bg-nexus-800 border border-purple-800/40 rounded-xl text-xs font-semibold text-gray-200 transition-all hover-lift flex items-center justify-center gap-2"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24">
+                <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z" />
+                <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z" />
+                <path fill="#FBBC05" d="M5.6 14.8c-.3-.8-.4-1.8-.4-2.8s.1-2 .4-2.8L1.9 6.3C.7 8.7 0 10.3 0 12s.7 3.3 1.9 5.7l3.7-2.9z" />
+                <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.4-6.4-5.2L1.9 16c1.8 3.7 5.6 7 10.1 7z" />
+              </svg>
+              <span>Sign in with Google</span>
+            </button>
+          </div>
+
+          <div className="relative flex py-1 items-center">
+            <div className="flex-grow border-t border-purple-900/40" />
+            <span className="flex-shrink mx-3 text-[10px] text-gray-500 uppercase tracking-widest font-mono">Or use credentials</span>
+            <div className="flex-grow border-t border-purple-900/40" />
+          </div>
 
           <div className="grid grid-cols-3 gap-2 bg-nexus-900/80 p-1 rounded-xl border border-purple-900/30">
             {roles.map((r) => {
