@@ -3,6 +3,7 @@ import json
 import os
 import re
 import requests
+import time
 from dotenv import load_dotenv
 from fastapi import HTTPException
 
@@ -14,25 +15,25 @@ OPENROUTER_KEY = os.getenv("OPENROUTER_API_KEY")
 if GEMINI_KEY:
     genai.configure(api_key=GEMINI_KEY)
 
-# Primary Gemini Models (valid Google Generative AI SDK identifiers)
+# Primary Gemini Models
 GEMINI_MODELS = [
     "gemini-2.0-flash",
-    "gemini-1.5-flash",
-    "gemini-1.5-pro",
+    "gemini-1.5-flash-latest",
+    "gemini-1.5-pro-latest",
+    "gemini-2.0-flash-lite-preview-02-05",
 ]
 
 # OpenRouter Free Models (verified active free endpoints)
 OPENROUTER_FREE_MODELS = [
-    "inclusionai/ling-3.0-flash:free",
-    "nvidia/nemotron-3-ultra:free",
-    "openrouter/free",
-    "google/gemini-2.0-flash-exp:free",
     "meta-llama/llama-3.3-70b-instruct:free",
     "meta-llama/llama-3.1-8b-instruct:free",
     "qwen/qwen-2.5-coder-32b-instruct:free",
+    "google/gemini-2.0-pro-exp-02-05:free",
+    "google/gemini-2.0-flash-lite-preview-02-05:free",
+    "deepseek/deepseek-r1-distill-llama-70b:free",
     "google/gemma-2-9b-it:free",
     "mistralai/mistral-7b-instruct:free",
-    "deepseek/deepseek-r1:free",
+    "cognitivecomputations/dolphin-mixtral-8x7b:free",
 ]
 
 EXTRACT_PROMPT = """

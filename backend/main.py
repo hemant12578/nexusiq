@@ -62,10 +62,11 @@ def root():
     return {
         "name": "nexusiq-api",
         "status": "online",
-        "version": "1.0.1"
+        "version": "1.0.2"
     }
 
 @app.get("/health")
+@app.get("/health/")
 def health():
     return {"status": "healthy", "uptime": time.time() - stats["start_time"]}
 
