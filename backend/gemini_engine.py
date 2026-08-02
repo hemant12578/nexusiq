@@ -13,25 +13,23 @@ OPENROUTER_KEY = os.getenv("OPENROUTER_API_KEY")
 if GEMINI_KEY:
     genai.configure(api_key=GEMINI_KEY)
 
-# Primary Gemini Models
-# hemant: switched to gemini-2.5-flash for default, way faster
+# Primary Gemini Models (valid Google Generative AI SDK identifiers)
 GEMINI_MODELS = [
-    "gemini-2.5-flash",
-    "gemini-2.5-pro",
-    "gemini-2.0-flash", # v2 approach - old one was too slow
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+    "gemini-1.5-pro",
 ]
 
-# OpenRouter Free Models
+# OpenRouter Free Models (verified free endpoints)
 OPENROUTER_FREE_MODELS = [
     "openrouter/free",
-    "google/gemma-4-26b-a4b-it:free",
-    "google/gemma-4-31b-it:free",
-    "inclusionai/ling-3.0-flash:free",
-    "openai/gpt-oss-20b:free",
-    "poolside/laguna-s-2.1:free",
-    "nvidia/nemotron-nano-9b-v2:free",
-    "cohere/north-mini-code:free",
-    "google/gemini-2.5-flash",
+    "google/gemini-2.0-flash-exp:free",
+    "meta-llama/llama-3.3-70b-instruct:free",
+    "meta-llama/llama-3.1-8b-instruct:free",
+    "qwen/qwen-2.5-coder-32b-instruct:free",
+    "google/gemma-2-9b-it:free",
+    "mistralai/mistral-7b-instruct:free",
+    "deepseek/deepseek-r1:free",
 ]
 
 EXTRACT_PROMPT = """
@@ -133,7 +131,7 @@ def call_openrouter_free(prompt: str) -> str:
         try:
             payload = {
                 "model": model_name,
-                "max_tokens": 2048,
+                "max_tokens": 1024,
                 "messages": [{"role": "user", "content": prompt}]
             }
             resp = requests.post(
