@@ -28,7 +28,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -58,8 +58,8 @@ async def sse_stream():
 def root():
     return {
         "name": "nexusiq-api",
-        "status": "up",
-        "version": "1.0.0"
+        "status": "online",
+        "version": "1.0.1"
     }
 
 @app.get("/health")
@@ -69,24 +69,29 @@ def health():
 @app.post("/upload-pdf")
 @limiter.limit("30/minute")
 async def upload_pdf(request: Request, file: UploadFile = File(...)):
-    if not file.filename.endswith(".pdf"):
+    if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are accepted.")
     
     contents = await file.read()
     if len(contents) > 100 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="File size exceeds the 100MB limit.")
         
-    pdf = fitz.open(stream=contents, filetype="pdf")
-    
-    text = ""
-    for page_num, page in enumerate(pdf):
-        text += f"\n[PAGE {page_num + 1}]\n"
-        text += page.get_text()
-        tables = page.find_tables()
-        if tables:
-            for table in tables:
-                text += "\n[TABLE]\n"
-                text += str(table.extract())
+    try:
+        pdf = fitz.open(stream=contents, filetype="pdf")
+        text = ""
+        for page_num, page in enumerate(pdf):
+            text += f"\n[PAGE {page_num + 1}]\n"
+            text += page.get_text()
+            try:
+                tables = page.find_tables()
+                if tables:
+                    for table in tables:
+                        text += "\n[TABLE]\n"
+                        text += str(table.extract())
+            except Exception:
+                pass
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Could not parse PDF file: {str(e)}")
     
     truncated = False
     if len(text) > 15000:
@@ -111,7 +116,7 @@ async def upload_pdf(request: Request, file: UploadFile = File(...)):
             "truncated": truncated
         }
     else:
-        raise HTTPException(status_code=500, detail=result["error"])
+        raise HTTPException(status_code=500, detail=result.get("error", "Failed to extract entities"))
 
 @app.post("/upload-batch")
 @limiter.limit("30/minute")
