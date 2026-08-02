@@ -16,6 +16,23 @@ export default function LoginPage({ onLoginSuccess }) {
   const [resetError, setResetError] = useState("")
   const [resetLoading, setResetLoading] = useState(false)
 
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setResetError("Enter your email first")
+      return
+    }
+    setResetLoading(true)
+    setResetMsg("")
+    setResetError("")
+    try {
+      await sendPasswordResetEmail(auth, email)
+      setResetMsg("Reset link sent to " + email)
+    } catch (err) {
+      setResetMsg("Reset link sent if account exists")
+    }
+    setResetLoading(false)
+  }
+
   const executeLoginSuccess = (userObj) => {
     setScanning(false)
     setAuthed(true)
