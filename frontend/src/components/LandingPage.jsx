@@ -31,7 +31,7 @@ export default function LandingPage({ user }) {
   const [liveStats, setLiveStats] = useState(null)
 
   // Fetch live system statistics
-  const API = import.meta.env.VITE_API_URL || 'https://nexusiq-backend-production.up.railway.app'
+  const API = (import.meta.env.VITE_API_URL || 'https://nexusiq-backend-production.up.railway.app').replace(/\/+$/, '')
   useEffect(() => {
     axios.get(`${API}/stats`).then(r => setLiveStats(r.data)).catch(() => {})
   }, [])

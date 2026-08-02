@@ -16,7 +16,7 @@ import axios from 'axios'
 import { auth, onAuthStateChanged, signOut } from './firebase'
 
 // Configure API endpoint based on environment
-const API = import.meta.env.VITE_API_URL || 'https://nexusiq-backend-production.up.railway.app'
+const API = (import.meta.env.VITE_API_URL || 'https://nexusiq-backend-production.up.railway.app').replace(/\/+$/, '')
 
 export default function App() {
   // Persist user state to prevent flickering during auth initialization

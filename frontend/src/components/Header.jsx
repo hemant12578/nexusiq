@@ -53,7 +53,7 @@ export default function Header({ stats, user, onLogout, API }) {
   const handleExportAuditReport = async () => {
     setDownloadingReport(true)
     try {
-      const apiEndpoint = API || import.meta.env.VITE_API_URL || "https://nexusiq-backend-production.up.railway.app"
+      const apiEndpoint = (API || import.meta.env.VITE_API_URL || "https://nexusiq-backend-production.up.railway.app").replace(/\/+$/, '')
       const res = await axios.get(`${apiEndpoint}/export-report`)
       const reportData = res.data
 

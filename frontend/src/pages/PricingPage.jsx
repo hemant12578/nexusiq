@@ -95,7 +95,7 @@ export default function PricingPage({ user }) {
     setPaymentStatus(null)
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'https://nexusiq-backend-production.up.railway.app'
+      const API_URL = (import.meta.env.VITE_API_URL || 'https://nexusiq-backend-production.up.railway.app').replace(/\/+$/, '')
       let order_id = null
       let amount = plan.priceInPaise
       let currency = "INR"

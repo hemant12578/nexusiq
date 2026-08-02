@@ -18,13 +18,16 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
+
 load_dotenv()
 
 limiter = Limiter(key_func=get_remote_address)
-app = FastAPI(title="NexusIQ API", version="1.0.1")
+app = FastAPI(title="NexusIQ API", version="1.0.1", redirect_slashes=False)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -67,6 +70,7 @@ def health():
     return {"status": "healthy", "uptime": time.time() - stats["start_time"]}
 
 @app.post("/upload-pdf")
+@app.post("/upload-pdf/")
 @limiter.limit("30/minute")
 async def upload_pdf(request: Request, file: UploadFile = File(...)):
     if not file.filename.lower().endswith(".pdf"):
@@ -119,6 +123,7 @@ async def upload_pdf(request: Request, file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=result.get("error", "Failed to extract entities"))
 
 @app.post("/upload-batch")
+@app.post("/upload-batch/")
 @limiter.limit("30/minute")
 async def upload_batch(request: Request, files: List[UploadFile] = File(...)):
     results = []
@@ -155,6 +160,7 @@ async def upload_batch(request: Request, files: List[UploadFile] = File(...)):
     return {"results": results}
 
 @app.post("/upload-audio")
+@app.post("/upload-audio/")
 @limiter.limit("30/minute")
 async def upload_audio(request: Request, file: UploadFile = File(...)):
     contents = await file.read()
@@ -181,6 +187,7 @@ async def upload_audio(request: Request, file: UploadFile = File(...)):
         raise HTTPException(500, result["error"])
 
 @app.post("/upload-video")
+@app.post("/upload-video/")
 @limiter.limit("30/minute")
 async def upload_video(request: Request, file: UploadFile = File(...)):
     contents = await file.read()
@@ -214,6 +221,7 @@ class TextInput(BaseModel):
     source_name: Optional[str] = "manual_input"
 
 @app.post("/upload-text")
+@app.post("/upload-text/")
 @limiter.limit("30/minute")
 def upload_text(request: Request, data: TextInput):
     result = extract_entities(data.text, data.source_name)
@@ -280,7 +288,9 @@ class QueryRequest(BaseModel):
         return self.question or self.chatInput or ""
 
 @app.post("/query")
+@app.post("/query/")
 @app.post("/ask-compliance")
+@app.post("/ask-compliance/")
 @limiter.limit("30/minute")
 def query(request: Request, req: QueryRequest):
     start = time.time()
