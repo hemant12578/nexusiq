@@ -69,14 +69,14 @@ export default function PricingPage({ user }) {
   ]
 
   const handleRazorpayCheckout = async (plan) => {
-    if (!user) {
+    if (!user || !user.email) {
       setPaymentStatus({
         type: "error",
-        message: "🔒 Login required! Redirecting to login portal so you can subscribe..."
+        message: "🔒 Login required! Please sign in to your officer account before subscribing."
       })
       setTimeout(() => {
         navigate("/login")
-      }, 1500)
+      }, 1200)
       return
     }
 
@@ -340,6 +340,11 @@ export default function PricingPage({ user }) {
                     <>
                       <Loader2 className="w-4 h-4 animate-spin text-purple-300" />
                       <span>Initializing...</span>
+                    </>
+                  ) : (!user || !user.email) && plan.priceInPaise > 0 ? (
+                    <>
+                      <Lock className="w-4 h-4 text-purple-300" />
+                      <span>Sign in to Subscribe</span>
                     </>
                   ) : (
                     <>
