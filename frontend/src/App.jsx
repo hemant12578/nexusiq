@@ -81,7 +81,7 @@ export default function App() {
         <Header stats={stats} user={user} onLogout={handleLogout} API={API} />
         <Routes>
           <Route path="/" element={<LandingPage user={user} />} />
-          <Route path="/login" element={<LoginPage user={user} onLoginSuccess={setUser} />} />
+          <Route path="/login" element={<LoginPage onLoginSuccess={setUser} />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/architecture" element={<ArchitecturePage />} />
           <Route path="/pricing" element={<PricingPage />} />

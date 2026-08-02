@@ -4,10 +4,7 @@ import { auth, signInWithEmailAndPassword, sendPasswordResetEmail } from "../fir
 import { useNavigate, Link, Navigate } from "react-router-dom"
 import { saveUserProfile } from "../services/firestoreService"
 
-export default function LoginPage({ onLoginSuccess, user }) {
-  if (user) {
-    return <Navigate to="/workspace" replace />
-  }
+export default function LoginPage({ onLoginSuccess }) {
   const navigate = useNavigate()
   const [role, setRole] = useState("officer")
   const [email, setEmail] = useState("compliance.officer@nexusiq.enterprise")
