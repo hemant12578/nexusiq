@@ -1,12 +1,13 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { ArrowLeft, Check, Sparkles, Zap, ShieldCheck, Building2, HelpCircle, CheckCircle2, AlertCircle, Info, Loader2, CreditCard } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { ArrowLeft, Check, Sparkles, Zap, ShieldCheck, Building2, HelpCircle, CheckCircle2, AlertCircle, Info, Loader2, CreditCard, Lock } from 'lucide-react'
 import axios from 'axios'
 
-export default function PricingPage() {
+export default function PricingPage({ user }) {
   const [isAnnual, setIsAnnual] = useState(true)
   const [paymentStatus, setPaymentStatus] = useState(null)
   const [loadingPlan, setLoadingPlan] = useState(null)
+  const navigate = useNavigate()
 
   const plans = [
     {
@@ -68,8 +69,19 @@ export default function PricingPage() {
   ]
 
   const handleRazorpayCheckout = async (plan) => {
+    if (!user) {
+      setPaymentStatus({
+        type: "error",
+        message: "🔒 Login required! Redirecting to login portal so you can subscribe..."
+      })
+      setTimeout(() => {
+        navigate("/login")
+      }, 1500)
+      return
+    }
+
     if (plan.priceInPaise === 0) {
-      window.location.href = "/workspace"
+      navigate("/workspace")
       return
     }
     if (!plan.priceInPaise) {
@@ -144,8 +156,8 @@ export default function PricingPage() {
           setLoadingPlan(null)
         },
         prefill: {
-          name: "Compliance Officer",
-          email: "officer@nexusiq.enterprise",
+          name: user?.displayName || (user?.email ? user.email.split("@")[0] : "Compliance Officer"),
+          email: user?.email || "officer@nexusiq.enterprise",
           contact: "9999999999"
         },
         notes: {

@@ -84,7 +84,7 @@ export default function App() {
           <Route path="/login" element={<LoginPage onLoginSuccess={setUser} />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/architecture" element={<ArchitecturePage />} />
-          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/pricing" element={<PricingPage user={user} />} />
           <Route path="/workspace" element={
             <ProtectedRoute user={user}>
               <Workspace
