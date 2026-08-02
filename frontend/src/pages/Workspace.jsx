@@ -7,6 +7,7 @@ import StatsBar from '../components/StatsBar'
 import NodeDetail from '../components/NodeDetail'
 import ActivityFeed from '../components/ActivityFeed'
 import { BrainCircuit, FileUp, Mic, FileText, Cpu, Radio } from 'lucide-react'
+import { getApiUrl } from '../utils/api'
 
 export default function Workspace({ API, graphData, stats, loading, setLoading, selectedNode, setSelectedNode, fetchGraph, fetchStats, handleUploadSuccess, user }) {
   const [rpiSending, setRpiSending] = useState(false)
@@ -35,7 +36,8 @@ export default function Workspace({ API, graphData, stats, loading, setLoading, 
       // Randomly pick one incident
       const randomIncident = incidents[Math.floor(Math.random() * incidents.length)];
 
-      await axios.post(`${API}/upload-text`, {
+      const baseUrl = getApiUrl(API)
+      await axios.post(`${baseUrl}/upload-text`, {
         text: `Live edge incident: ${randomIncident} Escalated to CISO.`,
         source_name: "RPi_EdgeNode_Live"
       })

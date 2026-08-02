@@ -14,9 +14,10 @@ import NotFoundPage from './pages/NotFoundPage'
 import LiveFeed from './components/LiveFeed'
 import axios from 'axios'
 import { auth, onAuthStateChanged, signOut } from './firebase'
+import { getApiUrl } from './utils/api'
 
 // Configure API endpoint based on environment
-const API = (import.meta.env.VITE_API_URL || 'https://nexusiq-backend-production.up.railway.app').replace(/\/+$/, '')
+const API = getApiUrl()
 
 export default function App() {
   // Persist user state to prevent flickering during auth initialization
@@ -58,14 +59,15 @@ export default function App() {
   }, [])
 
   const handleLogout = () => {
-    signOut(auth).catch(e => console.error('Logout error:', e))
-    localStorage.removeItem('nexusiq_user')
+    signOut(auth)
     setUser(null)
+    localStorage.removeItem('nexusiq_user')
   }
 
   const fetchGraph = async () => {
     try {
-      const res = await axios.get(`${API}/graph`)
+      const baseUrl = getApiUrl(API)
+      const res = await axios.get(`${baseUrl}/graph`)
       setGraphData(res.data)
     } catch (e) { 
       // Handle edge case where empty graph throws 500 error
@@ -75,7 +77,8 @@ export default function App() {
 
   const fetchStats = async () => {
     try {
-      const res = await axios.get(`${API}/stats`)
+      const baseUrl = getApiUrl(API)
+      const res = await axios.get(`${baseUrl}/stats`)
       setStats(res.data)
     } catch (e) { console.error('Stats fetch error:', e) }
   }

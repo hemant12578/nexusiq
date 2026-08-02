@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react"
 import axios from "axios"
 import { BrainCircuit, Sparkles, Search, ShieldCheck, Clock, Database, ArrowRight, CornerDownRight, FileDown, RotateCcw } from "lucide-react"
 import { saveQueryHistory } from '../services/firestoreService'
+import { getApiUrl } from '../utils/api'
 
 function TypingEffect({ text, speed = 10 }) {
   const [displayed, setDisplayed] = useState("")
@@ -44,7 +45,8 @@ export default function QueryInterface({ API, onQuery, user }) {
     setAnswer(null)
     try {
       // Perform query against the RAG backend
-      const res = await axios.post(`${API}/query`, { question })
+      const baseUrl = getApiUrl(API)
+      const res = await axios.post(`${baseUrl}/query`, { question })
       const rawAnswer = res.data.answer || ""
       const cleanText = rawAnswer.replace(/^ANSWER:\s*/i, '').split('\nSOURCES:')[0].trim()
       

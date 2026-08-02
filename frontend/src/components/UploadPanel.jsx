@@ -2,6 +2,7 @@ import { useState, useRef } from "react"
 import axios from "axios"
 import { FolderUp, FileUp, Mic, FileText, Video, CheckCircle2, Zap, Sparkles, Database, Layers, AlertTriangle, X } from "lucide-react"
 import { saveUploadRecord } from '../services/firestoreService'
+import { getApiUrl } from '../utils/api'
 
 export default function UploadPanel({ API, onUploadSuccess, setLoading, user }) {
   const [uploads, setUploads] = useState([])
@@ -14,6 +15,7 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading, user }) 
   const mediaRef = useRef(null)
   const chunksRef = useRef([])
   const toastTimer = useRef(null)
+  const baseUrl = getApiUrl(API)
 
   const showToast = (msg, type = 'error') => {
     if (toastTimer.current) clearTimeout(toastTimer.current)
@@ -32,7 +34,7 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading, user }) 
     const form = new FormData()
     form.append("file", file)
     try {
-      const res = await axios.post(`${API}/upload-pdf`, form, {
+      const res = await axios.post(`${baseUrl}/upload-pdf`, form, {
         timeout: 60000
       })
       setUploads(prev => [...prev, {
@@ -65,7 +67,7 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading, user }) 
     const form = new FormData()
     form.append("file", file)
     try {
-      const res = await axios.post(`${API}/upload-video`, form)
+      const res = await axios.post(`${baseUrl}/upload-video`, form)
       setUploads(prev => [...prev, {
         name: file.name,
         entities: res.data.entities_found,
@@ -97,7 +99,7 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading, user }) 
         setLoading(true);
         setUploading(true);
         try {
-          const res = await axios.post(`${API}/upload-audio`, form);
+          const res = await axios.post(`${baseUrl}/upload-audio`, form);
           setUploads(prev => [...prev, {
             name: file.name,
             entities: res.data.entities_found,
@@ -133,7 +135,7 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading, user }) 
         setLoading(true)
         setUploading(true)
         try {
-          const res = await axios.post(`${API}/upload-audio`, form)
+          const res = await axios.post(`${baseUrl}/upload-audio`, form)
           setUploads(prev => [...prev, {
             name: "Audio Recording Log",
             entities: res.data.entities_found,
@@ -168,7 +170,7 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading, user }) 
     setLoading(true)
     setUploading(true)
     try {
-      const res = await axios.post(`${API}/upload-text`, {
+      const res = await axios.post(`${baseUrl}/upload-text`, {
         text: text,
         source_name: "manual_input"
       })
