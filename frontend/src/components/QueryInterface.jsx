@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react"
 import axios from "axios"
-import { BrainCircuit, Sparkles, Search, ShieldCheck, Clock, Database, ArrowRight, CornerDownRight, FileDown } from "lucide-react"
+import { BrainCircuit, Sparkles, Search, ShieldCheck, Clock, Database, ArrowRight, CornerDownRight, FileDown, RotateCcw } from "lucide-react"
 import { saveQueryHistory } from '../services/firestoreService'
 
 function TypingEffect({ text, speed = 10 }) {
@@ -62,7 +62,7 @@ export default function QueryInterface({ API, onQuery, user }) {
       saveQueryHistory(user?.uid, question, cleanText || rawAnswer, res.data.sources || [])
       onQuery()
     } catch (e) {
-      setAnswer({ answer: "Query failed. Please check backend connection.", sources: [], ts: Date.now() })
+      setAnswer({ answer: "Query failed. Please check backend connection.", sources: [], ts: Date.now(), isError: true })
     }
     setLoading(false)
     setQuestion("")
@@ -108,12 +108,41 @@ export default function QueryInterface({ API, onQuery, user }) {
         </button>
       </div>
 
+      {!answer && !loading && (
+        <div className="flex flex-wrap gap-2 animate-fade-in">
+          {[
+            'What compliance policies are referenced?',
+            'Show all entities from the latest document',
+            'Are there any ISO 27001 violations?',
+            'Summarize the compliance status'
+          ].map(s => (
+            <button
+              key={s}
+              onClick={() => { setQuestion(s); }}
+              className="px-3 py-1.5 bg-nexus-800/50 hover:bg-nexus-700/50 border border-purple-900/30 hover:border-purple-500/50 text-gray-300 text-[11px] rounded-full transition-all cursor-pointer"
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
 
       {loading && (
-        <div className="space-y-3 p-4 bg-nexus-800/30 rounded-xl border border-purple-900/20 animate-fade-in">
-          <div className="h-3 bg-purple-900/30 rounded-full shimmer" style={{ width: '85%' }} />
-          <div className="h-3 bg-purple-900/30 rounded-full shimmer" style={{ width: '65%', animationDelay: '0.15s' }} />
-          <div className="h-3 bg-purple-900/30 rounded-full shimmer" style={{ width: '75%', animationDelay: '0.3s' }} />
+        <div className="space-y-4 p-5 bg-nexus-800/40 rounded-2xl border border-purple-700/20 animate-fade-in">
+          <div className="flex items-center gap-2 text-xs text-purple-400 font-medium">
+            <Sparkles className="w-4 h-4 animate-pulse" />
+            <span className="flex items-center">
+              AI is processing
+              <span className="animate-[bounce_1.4s_infinite] ml-1">.</span>
+              <span className="animate-[bounce_1.4s_infinite_0.2s]">.</span>
+              <span className="animate-[bounce_1.4s_infinite_0.4s]">.</span>
+            </span>
+          </div>
+          <div className="space-y-3">
+            <div className="h-3 bg-gray-600/40 rounded-full animate-pulse" style={{ width: '85%' }} />
+            <div className="h-3 bg-gray-600/40 rounded-full animate-pulse" style={{ width: '65%', animationDelay: '0.15s' }} />
+            <div className="h-3 bg-gray-600/40 rounded-full animate-pulse" style={{ width: '75%', animationDelay: '0.3s' }} />
+          </div>
         </div>
       )}
 
@@ -121,34 +150,44 @@ export default function QueryInterface({ API, onQuery, user }) {
       {answer && !loading && (
         <div ref={answerRef} className="bg-nexus-800/60 rounded-2xl p-4 border border-purple-700/30 space-y-3 animate-fade-in glow-border">
 
-          <div className="flex items-center gap-2">
-            {answer.nodes !== undefined && (
-              <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-medium bg-purple-900/60 text-purple-300 flex items-center gap-1">
-                <Database className="w-3 h-3" /> {answer.nodes} nodes
+          {!answer.isError && (
+            <div className="flex items-center gap-2">
+              {answer.nodes !== undefined && (
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-medium bg-purple-900/60 text-purple-300 flex items-center gap-1">
+                  <Database className="w-3 h-3" /> {answer.nodes} nodes
+                </span>
+              )}
+              {answer.time !== undefined && (
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-medium bg-cyan-900/40 text-cyan-300 flex items-center gap-1">
+                  <Clock className="w-3 h-3" /> {answer.time}ms
+                </span>
+              )}
+              {answer.confidence !== undefined && (
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-medium bg-amber-900/40 text-amber-300 flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3" /> {answer.confidence}% confidence
+                </span>
+              )}
+              <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-medium bg-emerald-900/40 text-emerald-300 ml-auto flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3" /> Grounded
               </span>
-            )}
-            {answer.time !== undefined && (
-              <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-medium bg-cyan-900/40 text-cyan-300 flex items-center gap-1">
-                <Clock className="w-3 h-3" /> {answer.time}ms
-              </span>
-            )}
-            {answer.confidence !== undefined && (
-              <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-medium bg-amber-900/40 text-amber-300 flex items-center gap-1">
-                <ShieldCheck className="w-3 h-3" /> {answer.confidence}% confidence
-              </span>
-            )}
-            <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-medium bg-emerald-900/40 text-emerald-300 ml-auto flex items-center gap-1">
-              <ShieldCheck className="w-3 h-3" /> Grounded
-            </span>
+            </div>
+          )}
+
+          <div className={`text-xs ${answer.isError ? 'text-red-400' : 'text-gray-200'} leading-relaxed whitespace-pre-wrap font-light`}>
+            {answer.isError ? answer.answer : <TypingEffect text={answer.answer} speed={8} />}
           </div>
 
+          {answer.isError && (
+            <button
+              onClick={ask}
+              className="mt-4 w-full py-2.5 bg-red-950/60 hover:bg-red-900/60 border border-red-500/40 rounded-xl text-xs font-bold text-red-300 transition-all flex items-center justify-center gap-2 hover-lift shadow-md"
+            >
+              <RotateCcw className="w-4 h-4 text-red-400" />
+              <span>Retry Query</span>
+            </button>
+          )}
 
-          <div className="text-xs text-gray-200 leading-relaxed whitespace-pre-wrap font-light">
-            <TypingEffect text={answer.answer} speed={8} />
-          </div>
-
-
-              {answer.sources?.length > 0 && (
+          {!answer.isError && answer.sources?.length > 0 && (
                 <div className="border-t border-purple-900/30 pt-3 animate-fade-in">
                   <div className="text-[10px] text-purple-400 font-bold mb-2 uppercase tracking-widest flex items-center gap-1.5">
                     <Sparkles className="w-3 h-3 text-purple-400" />
@@ -167,9 +206,10 @@ export default function QueryInterface({ API, onQuery, user }) {
                 </div>
               )}
 
-              <button
-                onClick={() => {
-                  // shubham: making it look like a serious enterprise report for the judges lol
+              {!answer.isError && (
+                <button
+                  onClick={() => {
+                    // shubham: making it look like a serious enterprise report for the judges lol
                   const content = `================================================
 NEXUSIQ ENTERPRISE COMPLIANCE REPORT
 Generated: ${new Date().toLocaleString()}
@@ -202,9 +242,10 @@ VERIFICATION GUARANTEES:
                 }}
                 className="w-full py-2.5 bg-emerald-950/60 hover:bg-emerald-900/60 border border-emerald-500/40 rounded-xl text-xs font-bold text-emerald-300 transition-all flex items-center justify-center gap-2 hover-lift shadow-md"
               >
-                <FileDown className="w-4 h-4 text-emerald-400" />
-                <span>Export Compliance Report</span>
-              </button>
+                  <FileDown className="w-4 h-4 text-emerald-400" />
+                  <span>Export Compliance Report</span>
+                </button>
+              )}
             </div>
           )}
 

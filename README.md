@@ -1,28 +1,46 @@
-<div align="center">
+# NexusIQ 🧠
 
-# 🧠 NexusIQ
+![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)
+![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=flat&logo=fastapi)
+![Google Gemini](https://img.shields.io/badge/Google%20Gemini-8E75B2?style=flat&logo=google)
+![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=flat&logo=firebase&logoColor=black)
 
-### *From Scattered Documents to Zero-Hallucination Compliance Intelligence*
+**NexusIQ** is an AI-powered compliance intelligence platform designed to extract, analyze, and visualize complex relationships from diverse data sources to streamline compliance audits and risk management.
 
-[![Hackathon](https://img.shields.io/badge/InnovaHack-Chapter--1%20Round%202-purple?style=for-the-badge&logo=rocket)](https://github.com/hemant12578/nexusiq)
-[![Live App](https://img.shields.io/badge/Vercel-Live--App-000000?style=for-the-badge&logo=vercel)](https://nexusiq1.vercel.app)
-[![API Status](https://img.shields.io/badge/Railway-Production--API-0B0D0E?style=for-the-badge&logo=railway)](https://nexusiq-backend-production.up.railway.app/health)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+🔗 **[Live Demo](https://nexus-iq-drab.vercel.app)** | 🔗 **[Backend API](https://nexusiq-backend-production.up.railway.app)**
 
 ---
 
-</div>
+## ✨ Key Features
 
-## 📌 Executive Summary
+- 📄 **Multi-Format Document Upload:** Ingest data from PDFs, audio, video, and text sources.
+- 🤖 **AI Entity Extraction:** Powered by Google Gemini 2.5 Flash with intelligent multi-model fallback for robust extraction.
+- 🕸️ **Interactive Knowledge Graph:** Real-time 2D/3D graph visualization using D3.js and Three.js force-directed layouts.
+- 💬 **Natural Language Querying:** Ask questions against your compliance data and get cited, verifiable answers.
+- 📊 **Compliance Audit Reports:** Automatically generate comprehensive audit reports.
+- 🛡️ **Hallucination Detection:** Built-in confidence scoring and hallucination detection for AI responses.
+- 🔌 **IoT Edge Integration:** RPi IoT edge device incident simulation.
+- 💳 **Seamless Payments:** Integrated Razorpay Standard Checkout for premium features.
 
-Enterprise compliance teams manage thousands of unorganized, multi-modal compliance assets — across complex PDFs, audio call recordings, and raw text streams. Standard vector databases rely on naive text chunking, which fragments context and severs entity relationships. During compliance audits, this causes severe LLM hallucinations where accuracy is non-negotiable.
+## 🛠️ Tech Stack
 
-**NexusIQ** solves this by establishing a live **Edge-to-Cloud Compliance Intelligence Engine**:
-1. **Multi-Modal Document Ingestion**: Ingests PDFs, audio logs, and text input streams.
-2. **Gemini AI Extraction**: Extracts precise entity-relationship triplets using Gemini 2.5/2.0 Flash with automatic OpenRouter free tier fallback.
-3. **Live Knowledge Graph Web**: Builds an interactive D3.js force-directed knowledge graph with node detail inspectors.
-4. **Graph RAG Query Engine**: Uses NetworkX graph context to answer questions with zero hallucination and 100% verified source citations.
-5. **Raspberry Pi Edge Hardware Integration**: Features an edge client script with GPIO status blinking and automated incident forwarding.
+### Frontend
+- **Framework:** React + Vite
+- **Visualization:** D3.js (Force Graph), Three.js (3D Canvas)
+- **UI & Icons:** Lucide Icons
+- **Deployment:** Vercel
+
+### Backend
+- **Framework:** Python FastAPI
+- **AI Engine:** Google Gemini 2.5 Flash
+- **Graph Processing:** NetworkX
+- **Deployment:** Railway
+
+### Infrastructure & Services
+- **Authentication:** Firebase (Email/Password + Google OAuth)
+- **Payments:** Razorpay Standard Checkout
 
 ---
 
@@ -30,212 +48,127 @@ Enterprise compliance teams manage thousands of unorganized, multi-modal complia
 
 ```mermaid
 graph TD
-    subgraph Multi-Modal Ingestion
-        A1[Compliance PDFs] -->|PyMuPDF Text Extract| B1[Gemini 2.5 / OpenRouter LLM]
-        A2[Audio Incident Logs] -->|Multimodal Gemini API| B1
-        A3[Raspberry Pi Edge Agent] -->|HTTPS POST| B1
-        A4[Raw Text Streams] -->|Text Parser| B1
-    end
+    %% User Interfaces
+    Client[Web Frontend<br/>React + Vite]
+    IoT[RPi IoT Edge Device<br/>Incident Simulation]
 
-    subgraph Knowledge Graph Engine
-        B1 -->|Extract Triplets| C1[NetworkX DiGraph Engine]
-        C1 -->|Graph JSON Export| D1[D3.js Force-Directed Web]
-        C1 -->|Subgraph Context| E1[Graph RAG Reasoner]
-    end
+    %% Authentication & Payments
+    Auth[Firebase Auth]
+    Payment[Razorpay API]
+    
+    %% API Gateway / Backend
+    Backend[FastAPI Backend]
 
-    subgraph User Experience & Interface
-        D1 -->|Interactive Visuals| F1[React 18 + Three.js 3D WebGL]
-        E1 -->|Zero-Hallucination Answer + Citations| F1
-        F1 -->|Authentication| G1[Firebase Auth / Biometric Gateway]
-    end
+    %% AI & Processing Services
+    Gemini[Google Gemini 2.5 Flash<br/>AI Entity Extraction]
+    GraphEngine[NetworkX<br/>Graph Engine]
+    
+    %% Connections
+    Client -- "HTTP/REST" --> Backend
+    Client -- "Login/OAuth" --> Auth
+    Client -- "Checkout" --> Payment
+    IoT -- "Telemetry/Incidents" --> Backend
+    
+    Backend -- "Multi-modal Data" --> Gemini
+    Gemini -- "Entities/Relationships" --> GraphEngine
+    GraphEngine -- "Graph Data" --> Backend
+    
+    Backend -- "Graph JSON/Query Results" --> Client
 ```
 
 ---
 
-## ✨ Key Features
+## 📸 Screenshots
 
-### 1. 🌌 Interactive 3D WebGL & D3 Knowledge Canvas
-- **Three.js Particle Constellation**: 3D particle canvas background with dynamic proximity lines and mouse parallax.
-- **D3.js Force-Directed Web**: Node breathing glow rings, elastic node pop-in animations, dashed flow arrows, and hover highlights.
-- **Floating Inspector Drawer**: Inspect node connection density, degree centrality, and underlying source document citations.
+| Dashboard | Knowledge Graph |
+|-----------|-----------------|
+| *Screenshot coming soon* | *Screenshot coming soon* |
 
-### 2. 🛡️ Graph RAG Zero-Hallucination Guarantee
-- Strictly grounds every answer in the extracted entity-relationship graph.
-- Every compliance claim includes clickable **Verified Source Citations**.
-- If information is missing from the database, NexusIQ explicitly informs the auditor rather than guessing or hallucinating.
-
-### 3. 🤖 Multi-Model LLM Fallback Pipeline
-- **Primary**: Google Gemini 2.5 Flash / 2.0 Flash / 1.5 Flash via `google-generativeai`.
-- **Fallback**: Automatic seamless failover to free OpenRouter models (`openrouter/free`, `google/gemma-4-31b-it:free`, `inclusionai/ling-3.0-flash:free`, `openai/gpt-oss-20b:free`, `cohere/north-mini-code:free`).
-
-### 4. 🍓 Raspberry Pi Edge Hardware Agent (`rpi/edge_agent.py`)
-- Standalone Python client for edge hardware (Raspberry Pi 3/4/5).
-- Blinks physical GPIO LEDs (Pin 18) to signal transmission states.
-- Features automatic heartbeat verification against the Railway production API and CLI file upload support.
-
-### 5. 🔐 Enterprise Dual-Gate Security
-- Glassmorphism authentication portal with role selection (Compliance Officer, Risk Auditor, System Admin).
-- Biometric scan simulation and modular **Firebase Authentication** integration (`nexusiq-3e622`).
+| Audit Report | Query Interface |
+|--------------|-----------------|
+| *Screenshot coming soon* | *Screenshot coming soon* |
 
 ---
 
-## 🌐 Live Production Endpoints
-
-| Component | Platform | Live URL | Status |
-| :--- | :--- | :--- | :--- |
-| **Frontend App** | Vercel | **[https://nexusiq1.vercel.app](https://nexusiq1.vercel.app)** | Active ✅ |
-| **Backend API** | Railway | **[https://nexusiq-backend-production.up.railway.app](https://nexusiq-backend-production.up.railway.app)** | `{"status":"healthy"}` ✅ |
-| **GitHub Repo** | GitHub | **[https://github.com/hemant12578/nexusiq](https://github.com/hemant12578/nexusiq)** | Private Repo 🔒 |
-
----
-
-## 🚀 Local Installation & Setup
+## 🚀 Quick Start
 
 ### Prerequisites
-- **Node.js**: v18.0.0 or higher
-- **Python**: v3.10 or higher
-- **Package Managers**: `npm` and `pip` (or `py -m pip`)
+- Node.js (v18+)
+- Python (3.9+)
+- Firebase Project
+- Razorpay Account
+- Google Gemini API Key
 
----
-
-### 1. Backend Setup
-
+### Frontend Setup
 ```bash
-# Navigate to backend directory
-cd backend
-
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate # On Windows: .venv\Scripts\Activate.ps1
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Configure environment variables
-cp .env.example .env
-```
-
-Edit `backend/.env` with your API keys:
-```env
-GEMINI_API_KEY=your_gemini_api_key_here
-OPENROUTER_API_KEY=your_openrouter_api_key_here
-```
-
-Start the FastAPI server:
-```bash
-python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
-```
-
----
-
-### 2. Frontend Setup
-
-```bash
-# Navigate to frontend directory
-cd frontend
+# Clone the repository
+git clone https://github.com/yourusername/NexusIQ.git
+cd NexusIQ/frontend
 
 # Install dependencies
 npm install
 
-# Configure environment variables
+# Set up environment variables
 cp .env.example .env
-```
+# Add your Firebase and Razorpay keys to .env
 
-Edit `frontend/.env`:
-```env
-VITE_API_URL=http://localhost:8000
-VITE_FIREBASE_API_KEY=your_firebase_api_key
-VITE_FIREBASE_PROJECT_ID=your_firebase_project_id
-```
-
-Start the Vite development server:
-```bash
+# Start development server
 npm run dev
 ```
 
-Open `http://localhost:5173` in your browser.
-
----
-
-### ⚡ 1-Click Launchers
-
-- **Windows**: Double-click [`start.bat`](file:///m:/NexusIQ/start.bat) to launch both Backend (Port 8000) and Frontend (Port 5173) simultaneously.
-- **Linux/macOS**: Run `bash start.sh` in your terminal.
-
----
-
-## 🍓 Raspberry Pi Edge Deployment
-
-On your Raspberry Pi:
-
+### Backend Setup
 ```bash
-# Clone repository and navigate to rpi directory
-cd rpi
+cd ../backend
 
-# Run continuous health and status daemon
-python3 edge_agent.py
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows use `venv\Scripts\activate`
 
-# Forward an audio incident recording via CLI
-python3 edge_agent.py /path/to/incident_audio.webm
+# Install dependencies
+pip install -r requirements.txt
+
+# Set up environment variables
+cp .env.example .env
+# Add your Gemini API key and other secrets to .env
+
+# Start FastAPI server
+uvicorn main:app --reload
 ```
 
 ---
 
-## 📡 API Reference
+## 📖 API Documentation Summary
 
-### `GET /health`
-Returns backend health status and server uptime.
-```json
-{
-  "status": "healthy",
-  "uptime": 142.5
-}
-```
+The backend exposes a comprehensive RESTful API documented automatically via Swagger UI. Once the backend is running, visit `http://localhost:8000/docs` (or the [production backend URL](https://nexusiq-backend-production.up.railway.app/docs)) to explore endpoints.
 
-### `POST /upload-pdf`
-Extracts entities and relationships from an uploaded PDF compliance document.
-- **Request**: `multipart/form-data` (`file`: PDF)
-- **Response**: `{"success": true, "entities_found": 12, "relationships_found": 10}`
-
-### `POST /upload-audio`
-Transcribes audio incident log and extracts compliance entities.
-- **Request**: `multipart/form-data` (`file`: WEBM / MP3 / WAV)
-
-### `POST /upload-text`
-Extracts entities from raw text input.
-- **Request Body**: `{"text": "string", "source_name": "string"}`
-
-### `GET /graph`
-Returns full NetworkX graph JSON formatted for D3 visualization.
-
-### `POST /query`
-Performs Graph RAG compliance lookup.
-- **Request Body**: `{"question": "What are the penalty clauses?"}`
-- **Response**:
-```json
-{
-  "answer": "Grounded compliance answer string...",
-  "sources": ["ISO 27001 Section 4.2 from document.pdf"],
-  "nodes_searched": 18,
-  "edges_searched": 15,
-  "response_time_ms": 940
-}
-```
-
-### `DELETE /reset`
-Clears the active knowledge graph and resets processing statistics.
+**Key Endpoints:**
+- `POST /api/upload`: Upload multi-format documents for processing.
+- `GET /api/graph`: Retrieve the current state of the knowledge graph.
+- `POST /api/query`: Submit a natural language query against the graph data.
+- `GET /api/report`: Generate and download compliance audit reports.
+- `POST /api/simulate-incident`: Endpoint for RPi IoT edge device simulations.
 
 ---
 
-## 🏆 Hackathon Metadata
+## 👥 Team Nexus
 
-- **Event**: InnovaHack Chapter 1 - Round 2
-- **Domain**: Gen AI - PS1: Multi-Modal Knowledge Graph for Enterprise Compliance
-- **Team**: Nexus
-- **Deadline**: 2 Aug 2026, 6:00 PM IST
+1. **Hemant Prakash** — Lead Full Stack & AI Architect
+2. **Shubham Kumar** — QA & System Testing
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions to NexusIQ! 
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ---
 
 ## 📄 License
 
-Distributed under the MIT License. See [`LICENSE`](LICENSE) for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

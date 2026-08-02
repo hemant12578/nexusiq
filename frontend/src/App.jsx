@@ -12,7 +12,7 @@ import ArchitecturePage from './pages/ArchitecturePage'
 import PricingPage from './pages/PricingPage'
 import NotFoundPage from './pages/NotFoundPage'
 import axios from 'axios'
-import { auth, onAuthStateChanged } from './firebase'
+import { auth, onAuthStateChanged, signOut } from './firebase'
 
 // FIXME: switch to production railway URL before final demo submission! - shubham
 const API = import.meta.env.VITE_API_URL || 'https://nexusiq-backend-production.up.railway.app'
@@ -47,12 +47,17 @@ export default function App() {
         const u = { email: firebaseUser.email, role: 'officer', uid: firebaseUser.uid }
         setUser(u)
         localStorage.setItem('nexusiq_user', JSON.stringify(u))
+      } else {
+        // user signed out from another tab or session expired
+        setUser(null)
+        localStorage.removeItem('nexusiq_user')
       }
     })
     return () => unsubscribe()
   }, [])
 
   const handleLogout = () => {
+    signOut(auth).catch(e => console.error('Logout error:', e))
     localStorage.removeItem('nexusiq_user')
     setUser(null)
   }

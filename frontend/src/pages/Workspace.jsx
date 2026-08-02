@@ -5,24 +5,43 @@ import UploadPanel from '../components/UploadPanel'
 import QueryInterface from '../components/QueryInterface'
 import StatsBar from '../components/StatsBar'
 import NodeDetail from '../components/NodeDetail'
+import ActivityFeed from '../components/ActivityFeed'
 import { BrainCircuit, FileUp, Mic, FileText, Cpu, Radio } from 'lucide-react'
 
 export default function Workspace({ API, graphData, stats, loading, setLoading, selectedNode, setSelectedNode, fetchGraph, fetchStats, handleUploadSuccess, user }) {
   const [rpiSending, setRpiSending] = useState(false)
   const [rpiToast, setRpiToast] = useState(null)
+  const [activityRefreshKey, setActivityRefreshKey] = useState(0)
+
+  const wrappedHandleUploadSuccess = () => {
+    handleUploadSuccess()
+    setActivityRefreshKey(prev => prev + 1)
+  }
 
   // shubham: this simulates the raspberry pi sending an incident log to our backend
   const sendRPiIncident = async () => {
     setRpiSending(true)
     setLoading(true)
     try {
+      const time = new Date().toLocaleTimeString();
+      const incidents = [
+        `Unauthorized access to server room detected by RPi sensor node at ${time}. Employee badge scan failed. ISO 27001 Section 9.1 violation.`,
+        `Temperature anomaly detected in data center rack B7 by RPi thermal sensor at ${time}. Exceeds threshold. ISO 27001 A.11.1 physical security breach.`,
+        `Fire suppression system test triggered by RPi IoT node at ${time}. Compliance checkpoint logged. NIST SP 800-53 PE-13.`,
+        `Network intrusion attempt detected on perimeter by RPi edge node at ${time}. Blocked IP from blacklist. PCI DSS Requirement 1.1.`,
+        `Visitor without escort detected in restricted zone by RPi camera node at ${time}. HIPAA Physical Safeguard violation.`,
+        `Power backup UPS failure detected by RPi monitoring node at ${time}. Generator switchover delayed 3.2s. SOC 2 availability criteria A1.2.`
+      ];
+      // Randomly pick one incident
+      const randomIncident = incidents[Math.floor(Math.random() * incidents.length)];
+
       await axios.post(`${API}/upload-text`, {
-        text: `Live edge incident: Unauthorized access to server room detected by RPi sensor node at ${new Date().toLocaleTimeString()}. Employee badge scan failed. ISO 27001 Section 9.1 violation. Escalated to CISO.`,
+        text: `Live edge incident: ${randomIncident} Escalated to CISO.`,
         source_name: "RPi_EdgeNode_Live"
       })
       setRpiToast("📡 RPi Edge Incident Synced to Graph!")
       setTimeout(() => setRpiToast(null), 5000)
-      handleUploadSuccess()
+      wrappedHandleUploadSuccess()
     } catch (err) {
       console.error("RPi simulation error:", err)
       setRpiToast("⚠️ Failed to send RPi incident")
@@ -42,7 +61,7 @@ export default function Workspace({ API, graphData, stats, loading, setLoading, 
         <div className="w-80 border-r border-purple-900/20 overflow-y-auto glass-strong">
           <UploadPanel
             API={API}
-            onUploadSuccess={handleUploadSuccess}
+            onUploadSuccess={wrappedHandleUploadSuccess}
             setLoading={setLoading}
             user={user}
           />
@@ -128,8 +147,11 @@ export default function Workspace({ API, graphData, stats, loading, setLoading, 
         </div>
 
 
-        <div className="w-96 border-l border-purple-900/20 overflow-y-auto glass-strong">
-          <QueryInterface API={API} onQuery={() => { fetchGraph(); fetchStats(); }} user={user} />
+        <div className="w-96 border-l border-purple-900/20 flex flex-col glass-strong">
+          <div className="flex-1 overflow-y-auto">
+            <QueryInterface API={API} onQuery={() => { fetchGraph(); fetchStats(); setActivityRefreshKey(prev => prev + 1); }} user={user} />
+          </div>
+          <ActivityFeed user={user} refreshKey={activityRefreshKey} />
         </div>
       </div>
     </div>

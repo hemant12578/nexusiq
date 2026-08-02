@@ -1,5 +1,6 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
+import axios from "axios"
 import {
   ShieldCheck,
   Network,
@@ -27,6 +28,13 @@ import {
 export default function LandingPage({ user }) {
   const [activeTab, setActiveTab] = useState("pdf")
   const [openFaq, setOpenFaq] = useState(null)
+  const [liveStats, setLiveStats] = useState(null)
+
+  // hemant: pull live stats from backend to show on landing page
+  const API = import.meta.env.VITE_API_URL || 'https://nexusiq-backend-production.up.railway.app'
+  useEffect(() => {
+    axios.get(`${API}/stats`).then(r => setLiveStats(r.data)).catch(() => {})
+  }, [])
 
   // hemant: using hardcoded content here for demo. move to CMS later if we win
   const featureTabs = {
@@ -122,10 +130,10 @@ export default function LandingPage({ user }) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto pt-8">
           {/* shubham: check if we can make these numbers dynamic later */}
           {[
-            { label: "Accuracy", value: "High", sub: "Strict Citation Linking" },
-            { label: "Entity Types", value: "7 Types", sub: "Normalized Schema" },
-            { label: "Graph Engine", value: "NetworkX", sub: "DiGraph Web" },
-            { label: "Inference Latency", value: "< 1.2s", sub: "Fast Graph RAG" },
+            { label: "Documents Processed", value: liveStats ? liveStats.documents_processed : "—", sub: "Live from backend" },
+            { label: "Graph Nodes", value: liveStats ? liveStats.total_nodes : "—", sub: "Entity extraction" },
+            { label: "Compliance Score", value: liveStats ? `${liveStats.compliance_score}%` : "—", sub: "Real-time assessment" },
+            { label: "Risk Level", value: liveStats ? liveStats.risk_level : "—", sub: liveStats?.risk_level === 'LOW' ? '✅ All clear' : '⚠️ Needs attention' },
           ].map((s, i) => (
             <div key={i} className="bg-nexus-800/40 backdrop-blur-xl p-4 rounded-2xl border border-purple-900/30 text-center space-y-1 hover-lift">
               <div className="text-xl font-bold text-purple-300 font-mono">{s.value}</div>
@@ -370,9 +378,57 @@ export default function LandingPage({ user }) {
           <span>•</span>
           <span>Team Nexus</span>
           <span>•</span>
-          <span>Deadline: 2 Aug 2026, 6:00 PM IST</span>
+          <span>InnovaHack 2026</span>
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="px-6 py-12 border-t border-purple-900/20 bg-nexus-950/80 backdrop-blur-md">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <img src="/nexusiq-logo.jpg" alt="NexusIQ" className="w-8 h-8 rounded-lg" />
+                <span className="font-bold text-sm gradient-text">NexusIQ</span>
+              </div>
+              <p className="text-[11px] text-gray-500 font-light leading-relaxed">
+                AI-powered compliance intelligence platform that turns scattered documents into queryable knowledge graphs.
+              </p>
+            </div>
+            <div className="space-y-3">
+              <div className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Tech Stack</div>
+              <div className="flex flex-wrap gap-2">
+                {["React", "FastAPI", "Gemini AI", "D3.js", "NetworkX", "Firebase", "Razorpay"].map(t => (
+                  <span key={t} className="px-2 py-1 rounded-md bg-purple-950/60 border border-purple-900/30 text-[10px] text-purple-300 font-mono">{t}</span>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Team Nexus</div>
+              <div className="space-y-2">
+                <div className="text-xs text-gray-300">
+                  <span className="font-semibold text-purple-300">Hemant Prakash</span>
+                  <span className="text-gray-500"> — Lead Full Stack & AI Architect</span>
+                </div>
+                <div className="text-xs text-gray-300">
+                  <span className="font-semibold text-purple-300">Shubham Kumar</span>
+                  <span className="text-gray-500"> — QA & System Testing</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="border-t border-purple-900/20 pt-4 flex items-center justify-between text-[10px] text-gray-600">
+            <span>© 2026 NexusIQ. Built for InnovaHack.</span>
+            <div className="flex items-center gap-3">
+              <a href="https://github.com/hemant12578/nexusiq" target="_blank" rel="noopener noreferrer" className="hover:text-purple-400 transition-colors flex items-center gap-1">
+                <Globe className="w-3 h-3" /> GitHub
+              </a>
+              <Link to="/architecture" className="hover:text-purple-400 transition-colors">Architecture</Link>
+              <Link to="/about" className="hover:text-purple-400 transition-colors">About</Link>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
