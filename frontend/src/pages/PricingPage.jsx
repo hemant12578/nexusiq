@@ -1,15 +1,19 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Check, Sparkles, Zap, ShieldCheck, Building2, HelpCircle } from 'lucide-react'
+import { ArrowLeft, Check, Sparkles, Zap, ShieldCheck, Building2, HelpCircle, CheckCircle2, AlertCircle, Info, Loader2, CreditCard } from 'lucide-react'
+import axios from 'axios'
 
 export default function PricingPage() {
   const [isAnnual, setIsAnnual] = useState(true)
+  const [paymentStatus, setPaymentStatus] = useState(null)
+  const [loadingPlan, setLoadingPlan] = useState(null)
 
   const plans = [
     {
       name: "Starter",
       badge: "Free Forever",
       price: "₹0",
+      priceInPaise: 0,
       period: "forever",
       desc: "Essential Knowledge Graph RAG for small teams and developers.",
       features: [
@@ -27,6 +31,7 @@ export default function PricingPage() {
       name: "Professional",
       badge: "Most Popular",
       price: isAnnual ? "₹2,499" : "₹2,999",
+      priceInPaise: isAnnual ? 249900 : 299900,
       period: "per month",
       desc: "Full multi-modal compliance intelligence for growing enterprises.",
       features: [
@@ -37,14 +42,15 @@ export default function PricingPage() {
         "Edge Agent RPi Syncing",
         "Priority Support (24/7)"
       ],
-      cta: "Start Free Trial",
+      cta: "Subscribe with Razorpay",
       popular: true,
-      href: "/login"
+      href: "#"
     },
     {
       name: "Enterprise",
       badge: "Custom SLA",
       price: "Custom",
+      priceInPaise: null,
       period: "tailored billing",
       desc: "Dedicated infrastructure, on-premise graphs, and strict compliance SLAs.",
       features: [
@@ -60,6 +66,111 @@ export default function PricingPage() {
       href: "mailto:enterprise@nexusiq.ai"
     }
   ]
+
+  const handleRazorpayCheckout = async (plan) => {
+    if (plan.priceInPaise === 0) {
+      window.location.href = "/workspace"
+      return
+    }
+    if (!plan.priceInPaise) {
+      window.location.href = plan.href
+      return
+    }
+
+    setLoadingPlan(plan.name)
+    setPaymentStatus(null)
+
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'https://nexusiq-backend-production.up.railway.app'
+      const orderRes = await axios.post(`${API_URL}/api/create-order`, {
+        amount: plan.priceInPaise,
+        currency: "INR",
+        receipt: `rcpt_${plan.name.toLowerCase()}_${Date.now()}`
+      })
+
+      const { order_id, amount, currency, key_id } = orderRes.data
+
+      const options = {
+        key: key_id || import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_TKmFOflmOpT9Kw",
+        amount: amount,
+        currency: currency,
+        name: "NexusIQ Enterprise",
+        description: `${plan.name} Plan Subscription`,
+        image: "https://nexus-iq-drab.vercel.app/logo.png",
+        order_id: order_id,
+        handler: async function (response) {
+          try {
+            const verifyRes = await axios.post(`${API_URL}/api/verify-payment`, {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature
+            })
+
+            if (verifyRes.data.status === "success") {
+              setPaymentStatus({
+                type: "success",
+                message: `Payment Verified! Subscribed to ${plan.name} Plan (Payment ID: ${response.razorpay_payment_id})`
+              })
+            } else {
+              setPaymentStatus({
+                type: "error",
+                message: "Payment verification failed: Invalid signature."
+              })
+            }
+          } catch (verifyErr) {
+            setPaymentStatus({
+              type: "error",
+              message: verifyErr.response?.data?.detail || "Payment verification failed."
+            })
+          }
+          setLoadingPlan(null)
+        },
+        prefill: {
+          name: "Compliance Officer",
+          email: "officer@nexusiq.enterprise",
+          contact: "9999999999"
+        },
+        notes: {
+          plan_name: plan.name,
+          environment: "InnovaHack 2026"
+        },
+        theme: {
+          color: "#7c3aed"
+        },
+        modal: {
+          ondismiss: function () {
+            setPaymentStatus({
+              type: "info",
+              message: "Checkout cancelled by user."
+            })
+            setLoadingPlan(null)
+          }
+        }
+      }
+
+      if (window.Razorpay) {
+        const rzp = new window.Razorpay(options)
+        rzp.on('payment.failed', function (response) {
+          setPaymentStatus({
+            type: "error",
+            message: `Payment failed: ${response.error.description || response.error.reason}`
+          })
+          setLoadingPlan(null)
+        })
+        rzp.open()
+      } else {
+        alert("Razorpay SDK script not loaded. Please refresh the page.")
+        setLoadingPlan(null)
+      }
+    } catch (err) {
+      console.error("Razorpay order creation error:", err)
+      setPaymentStatus({
+        type: "error",
+        message: err.response?.data?.detail || "Failed to create Razorpay order. Please check backend connection."
+      })
+      setLoadingPlan(null)
+    }
+  }
 
   const faqs = [
     {
@@ -116,6 +227,30 @@ export default function PricingPage() {
 
       {/* Pricing Cards Grid */}
       <div className="max-w-6xl mx-auto px-6 py-12 relative z-10">
+        {/* Payment Status Banner */}
+        {paymentStatus && (
+          <div className={`mb-8 p-4 rounded-2xl border flex items-center justify-between gap-3 animate-fade-in ${
+            paymentStatus.type === 'success' 
+              ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-300' 
+              : paymentStatus.type === 'error'
+              ? 'bg-red-950/80 border-red-500/50 text-red-300'
+              : 'bg-cyan-950/80 border-cyan-500/50 text-cyan-300'
+          }`}>
+            <div className="flex items-center gap-3 text-xs font-semibold">
+              {paymentStatus.type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />}
+              {paymentStatus.type === 'error' && <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />}
+              {paymentStatus.type === 'info' && <Info className="w-5 h-5 text-cyan-400 shrink-0" />}
+              <span>{paymentStatus.message}</span>
+            </div>
+            <button 
+              onClick={() => setPaymentStatus(null)}
+              className="text-xs font-bold px-2.5 py-1 rounded-lg bg-black/40 hover:bg-black/60 transition-colors"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
           {plans.map((plan, idx) => (
             <div 
@@ -161,25 +296,28 @@ export default function PricingPage() {
               </div>
 
               <div className="pt-8">
-                {plan.href.startsWith('mailto:') ? (
-                  <a
-                    href={plan.href}
-                    className="w-full py-3 bg-purple-900/50 hover:bg-purple-800/60 border border-purple-500/40 rounded-xl text-xs font-bold text-purple-200 uppercase tracking-wider transition-all flex items-center justify-center gap-2 hover-lift"
-                  >
-                    <span>{plan.cta}</span>
-                  </a>
-                ) : (
-                  <Link
-                    to={plan.href}
-                    className={`w-full py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 hover-lift ${
-                      plan.popular
-                        ? 'bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-700/30'
-                        : 'bg-purple-900/50 hover:bg-purple-800/60 border border-purple-500/40 text-purple-200'
-                    }`}
-                  >
-                    <span>{plan.cta}</span>
-                  </Link>
-                )}
+                <button
+                  type="button"
+                  onClick={() => handleRazorpayCheckout(plan)}
+                  disabled={loadingPlan === plan.name}
+                  className={`w-full py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 hover-lift disabled:opacity-50 ${
+                    plan.popular
+                      ? 'bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-700/30'
+                      : 'bg-purple-900/50 hover:bg-purple-800/60 border border-purple-500/40 text-purple-200'
+                  }`}
+                >
+                  {loadingPlan === plan.name ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-purple-300" />
+                      <span>Initializing...</span>
+                    </>
+                  ) : (
+                    <>
+                      {plan.priceInPaise > 0 && <CreditCard className="w-4 h-4 text-purple-300" />}
+                      <span>{plan.cta}</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           ))}

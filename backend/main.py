@@ -3,6 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List
 import os
+import hmac
+import hashlib
+import time
+import razorpay
 from dotenv import load_dotenv
 from gemini_engine import extract_entities, answer_query, transcribe_audio, process_video, get_hallucination_stats
 from graph_engine import GraphEngine
@@ -284,3 +288,83 @@ def reset():
     stats["documents_processed"] = 0
     stats["total_queries"] = 0
     return {"success": True, "message": "NexusIQ graph cleared"}
+
+
+# ==========================================
+# RAZORPAY INTEGRATION ENDPOINTS
+# ==========================================
+
+RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_test_TKmFOflmOpT9Kw")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "RUf5kPeePt2vFZnxG0H7PioT")
+
+class CreateOrderRequest(BaseModel):
+    amount: int  # in paise (e.g., 299900 = ₹2999)
+    currency: Optional[str] = "INR"
+    receipt: Optional[str] = None
+    notes: Optional[dict] = None
+
+class VerifyPaymentRequest(BaseModel):
+    razorpay_order_id: str
+    razorpay_payment_id: str
+    razorpay_signature: str
+
+@app.post("/api/create-order")
+@limiter.limit("20/minute")
+async def create_order(request: Request, req: CreateOrderRequest):
+    if req.amount < 100:
+        raise HTTPException(status_code=400, detail="Amount must be at least 100 paise (₹1)")
+    
+    if not RAZORPAY_KEY_ID or not RAZORPAY_KEY_SECRET:
+        raise HTTPException(status_code=401, detail="Razorpay credentials not configured")
+        
+    try:
+        client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+        receipt_id = req.receipt or f"rcpt_{int(time.time())}"
+        
+        order_data = client.order.create({
+            "amount": req.amount,
+            "currency": req.currency or "INR",
+            "receipt": receipt_id,
+            "notes": req.notes or {"product": "NexusIQ Enterprise"}
+        })
+        
+        return {
+            "order_id": order_data["id"],
+            "amount": order_data["amount"],
+            "currency": order_data["currency"],
+            "key_id": RAZORPAY_KEY_ID
+        }
+    except razorpay.errors.SignatureVerificationError:
+        raise HTTPException(status_code=401, detail="Razorpay authentication failed")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create Razorpay order: {str(e)}")
+
+@app.post("/api/verify-payment")
+@limiter.limit("20/minute")
+async def verify_payment(request: Request, req: VerifyPaymentRequest):
+    if not req.razorpay_order_id or not req.razorpay_payment_id or not req.razorpay_signature:
+        raise HTTPException(status_code=400, detail="Missing required payment verification fields")
+        
+    try:
+        # Generate HMAC-SHA256 signature
+        msg = f"{req.razorpay_order_id}|{req.razorpay_payment_id}"
+        generated_signature = hmac.new(
+            RAZORPAY_KEY_SECRET.encode("utf-8"),
+            msg.encode("utf-8"),
+            hashlib.sha256
+        ).hexdigest()
+        
+        if hmac.compare_digest(generated_signature, req.razorpay_signature):
+            return {
+                "status": "success",
+                "message": "Payment verified successfully",
+                "payment_id": req.razorpay_payment_id,
+                "order_id": req.razorpay_order_id
+            }
+        else:
+            raise HTTPException(status_code=400, detail="Invalid payment signature")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Payment verification failed: {str(e)}")
+
