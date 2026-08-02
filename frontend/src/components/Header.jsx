@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
-import { Cpu, Layers, Network, Activity, ShieldCheck, Lock, Globe, FolderKanban, LogOut, FileSpreadsheet } from "lucide-react"
+import { Cpu, Layers, Network, Activity, ShieldCheck, Lock, Globe, FolderKanban, LogOut, FileSpreadsheet, Sparkles } from "lucide-react"
 import axios from "axios"
 
 function AnimatedNumber({ value, className }) {
@@ -141,6 +141,18 @@ ${reportData.audit_verdict}
           >
             <Layers className="w-3.5 h-3.5" />
             <span>Architecture</span>
+          </Link>
+
+          <Link
+            to="/pricing"
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+              location.pathname === "/pricing"
+                ? "bg-purple-900/50 text-purple-300 border border-purple-700/40"
+                : "text-gray-400 hover:text-gray-200 hover:bg-nexus-800/40"
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Pricing</span>
           </Link>
         </nav>
       </div>

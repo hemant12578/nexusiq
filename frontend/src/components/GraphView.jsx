@@ -172,7 +172,7 @@ export default function GraphView({ graphData, onNodeClick }) {
       .join("circle")
       .attr("r", 0)
       .attr("fill", "none")
-      .attr("stroke", d => NODE_COLORS[d.type] || NODE_COLORS.unknown)
+      .attr("stroke", d => NODE_COLORS[d.type?.toLowerCase()] || NODE_COLORS[d.type] || NODE_COLORS.unknown)
       .attr("stroke-opacity", 0.12)
       .attr("stroke-width", 5)
       .attr("filter", "url(#glow-soft)")
@@ -207,7 +207,7 @@ export default function GraphView({ graphData, onNodeClick }) {
       .data(nodes)
       .join("circle")
       .attr("r", 0)
-      .attr("fill", d => NODE_COLORS[d.type] || NODE_COLORS.unknown)
+      .attr("fill", d => NODE_COLORS[d.type?.toLowerCase()] || NODE_COLORS[d.type] || NODE_COLORS.unknown)
       .attr("fill-opacity", 0.9)
       .attr("stroke", "rgba(255,255,255,0.15)")
       .attr("stroke-width", 2)
@@ -228,7 +228,7 @@ export default function GraphView({ graphData, onNodeClick }) {
           .attr("cx", d.x).attr("cy", d.y)
           .attr("r", 16)
           .attr("fill", "none")
-          .attr("stroke", NODE_COLORS[d.type] || "#7c3aed")
+          .attr("stroke", NODE_COLORS[d.type?.toLowerCase()] || NODE_COLORS[d.type] || "#7c3aed")
           .attr("stroke-width", 2)
           .attr("stroke-opacity", 0.8)
         clickCircle.transition()
@@ -334,10 +334,32 @@ export default function GraphView({ graphData, onNodeClick }) {
   }, [graphData])
 
   return (
-    <svg
-      ref={svgRef}
-      className="w-full h-full"
-      style={{ background: "transparent" }}
-    />
+    <div className="relative w-full h-full">
+      {/* 7-Type Node Color Legend Overlay */}
+      {graphData.nodes.length > 0 && (
+        <div className="absolute top-4 left-4 z-10 bg-nexus-900/80 backdrop-blur-md p-3 rounded-xl border border-purple-900/40 shadow-xl flex flex-wrap items-center gap-3 max-w-md">
+          {[
+            { label: "Person", color: NODE_COLORS.person },
+            { label: "Document", color: NODE_COLORS.document },
+            { label: "Policy", color: NODE_COLORS.policy },
+            { label: "Date", color: NODE_COLORS.date },
+            { label: "Org", color: NODE_COLORS.organization },
+            { label: "Event", color: NODE_COLORS.event },
+            { label: "Location", color: NODE_COLORS.location },
+          ].map((type) => (
+            <div key={type.label} className="flex items-center gap-1.5 text-[11px] font-mono text-gray-300">
+              <span className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: type.color }} />
+              <span>{type.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <svg
+        ref={svgRef}
+        className="w-full h-full"
+        style={{ background: "transparent" }}
+      />
+    </div>
   )
 }

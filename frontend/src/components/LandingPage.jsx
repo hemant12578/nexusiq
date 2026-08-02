@@ -106,6 +106,14 @@ export default function LandingPage() {
             <Lock className="w-4 h-4 text-purple-400" />
             <span>Sign in</span>
           </Link>
+
+          <Link
+            to="/pricing"
+            className="px-8 py-4 bg-purple-900/40 hover:bg-purple-800/50 border border-purple-500/30 rounded-xl font-bold text-sm text-purple-200 transition-all hover-lift flex items-center gap-2"
+          >
+            <Sparkles className="w-4 h-4 text-amber-400" />
+            <span>Pricing &amp; Plans</span>
+          </Link>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto pt-8">

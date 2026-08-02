@@ -8,6 +8,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import Workspace from './pages/Workspace'
 import AboutPage from './pages/AboutPage'
 import ArchitecturePage from './pages/ArchitecturePage'
+import PricingPage from './pages/PricingPage'
 import NotFoundPage from './pages/NotFoundPage'
 import axios from 'axios'
 import { auth, onAuthStateChanged } from './firebase'
@@ -67,6 +68,7 @@ export default function App() {
           <Route path="/login" element={<LoginPage onLoginSuccess={setUser} />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/architecture" element={<ArchitecturePage />} />
+          <Route path="/pricing" element={<PricingPage />} />
           <Route path="/workspace" element={
             <ProtectedRoute user={user}>
               <Workspace
