@@ -147,9 +147,8 @@ export default function AboutPage() {
   ]
 
   const team = [
-    { name: "Hemant Prakash", role: "Lead Full Stack & AI", skills: ["React", "FastAPI", "Three.js", "Gemini"] },
-    { name: "Aarav Sharma", role: "Backend & Systems", skills: ["Python", "NetworkX", "Cloud Infra"] },
-    { name: "Riya Patel", role: "Edge Architect", skills: ["Raspberry Pi", "IoT", "Performance"] }
+    { name: "Hemant Prakash", role: "Lead Full Stack & AI Architect", skills: ["React", "FastAPI", "Three.js", "Gemini"] },
+    { name: "Shubham Kumar", role: "QA & System Testing", skills: ["System Testing", "QA Audit", "Validation"] }
   ]
 
   return (
@@ -289,7 +288,7 @@ export default function AboutPage() {
         {/* Team Section */}
         <section className="pb-10">
           <h2 className="text-3xl font-bold mb-10 text-center text-white">Team Nexus</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 max-w-2xl mx-auto gap-8">
             {team.map((member, idx) => (
               <div key={idx} className="bg-nexus-800/60 glass-strong p-6 rounded-2xl text-center hover-lift border border-purple-500/10 hover:border-cyan-500/40 transition-all group">
                 <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-tr from-purple-600 to-cyan-500 p-1 mb-4 group-hover:scale-105 transition-transform">
