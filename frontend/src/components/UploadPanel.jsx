@@ -1,6 +1,6 @@
 import { useState, useRef } from "react"
 import axios from "axios"
-import { FolderUp, FileUp, Mic, FileText, CheckCircle2, Zap, Sparkles, Database, Layers, AlertTriangle, X } from "lucide-react"
+import { FolderUp, FileUp, Mic, FileText, Video, CheckCircle2, Zap, Sparkles, Database, Layers, AlertTriangle, X } from "lucide-react"
 import { saveUploadRecord } from '../services/firestoreService'
 
 export default function UploadPanel({ API, onUploadSuccess, setLoading, user }) {
@@ -51,18 +51,63 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading, user }) 
     setUploading(false)
   }
 
+  const uploadVideo = async (file) => {
+    setLoading(true)
+    setUploading(true)
+    const form = new FormData()
+    form.append("file", file)
+    try {
+      const res = await axios.post(`${API}/upload-video`, form)
+      setUploads(prev => [...prev, {
+        name: file.name,
+        entities: res.data.entities_found,
+        relationships: res.data.relationships_found || 0,
+        type: "video",
+        ts: Date.now()
+      }])
+      saveUploadRecord(user?.uid, file.name, 'video', res.data.entities_found, res.data.relationships_found || 0)
+      onUploadSuccess()
+      flashSuccess()
+    } catch (e) {
+      showToast(e.response?.data?.detail || "Video processing failed")
+    }
+    setLoading(false)
+    setUploading(false)
+  }
+
   const processFiles = async (files) => {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      if (file.type !== "application/pdf") {
-        showToast('Only PDF files are accepted');
-        continue;
+      const name = file.name.toLowerCase();
+      if (name.endsWith('.pdf')) {
+        await uploadPDF(file);
+      } else if (name.endsWith('.mp4') || name.endsWith('.webm') || name.endsWith('.mov') || name.endsWith('.avi') || name.endsWith('.mkv')) {
+        await uploadVideo(file);
+      } else if (name.endsWith('.mp3') || name.endsWith('.wav') || name.endsWith('.m4a') || name.endsWith('.aac') || name.endsWith('.ogg')) {
+        const form = new FormData();
+        form.append("file", file);
+        setLoading(true);
+        setUploading(true);
+        try {
+          const res = await axios.post(`${API}/upload-audio`, form);
+          setUploads(prev => [...prev, {
+            name: file.name,
+            entities: res.data.entities_found,
+            relationships: 0,
+            type: "audio",
+            ts: Date.now()
+          }]);
+          saveUploadRecord(user?.uid, file.name, 'audio', res.data.entities_found, 0);
+          onUploadSuccess();
+          flashSuccess();
+        } catch (e) {
+          showToast(e.response?.data?.detail || "Audio upload failed");
+        }
+        setLoading(false);
+        setUploading(false);
+      } else {
+        showToast(`Unsupported file type: ${file.name}`);
       }
-      if (file.size > 10 * 1024 * 1024) {
-        showToast(`${file.name} is too large (max 10MB)`);
-        continue;
-      }
-      await uploadPDF(file);
     }
   }
 
@@ -136,8 +181,8 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading, user }) 
     setUploading(false)
   }
 
-  const typeIcons = { pdf: FileUp, audio: Mic, text: FileText }
-  const typeColors = { pdf: "from-purple-500/10 to-purple-900/10", audio: "from-rose-500/10 to-rose-900/10", text: "from-cyan-500/10 to-cyan-900/10" }
+  const typeIcons = { pdf: FileUp, audio: Mic, text: FileText, video: Video }
+  const typeColors = { pdf: "from-purple-500/10 to-purple-900/10", audio: "from-rose-500/10 to-rose-900/10", text: "from-cyan-500/10 to-cyan-900/10", video: "from-amber-500/10 to-amber-900/10" }
 
   return (
     <div className="p-4 space-y-4 animate-slide-in-left relative">
@@ -187,13 +232,13 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading, user }) 
           <FolderUp className="w-6 h-6" />
         </div>
         <div className="text-sm text-gray-300 font-medium">
-          {uploading ? 'Processing document...' : 'Drop PDF here or click to upload'}
+          {uploading ? 'Processing file...' : 'Drop files here or click to upload'}
         </div>
-        <div className="text-xs text-gray-600 mt-1 font-light">PDF, audio, or text</div>
+        <div className="text-xs text-purple-400/80 mt-1 font-light">PDF, Video (MP4/WebM), Audio, or Text</div>
         <input
           id="pdfInput"
           type="file"
-          accept=".pdf"
+          accept=".pdf,.mp4,.webm,.mov,.avi,.mkv,.mp3,.wav,.m4a"
           multiple
           className="hidden"
           onChange={e => processFiles(e.target.files)}

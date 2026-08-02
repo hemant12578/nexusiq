@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from typing import Optional, List
 import os
 from dotenv import load_dotenv
-from gemini_engine import extract_entities, answer_query, transcribe_audio, get_hallucination_stats
+from gemini_engine import extract_entities, answer_query, transcribe_audio, process_video, get_hallucination_stats
 from graph_engine import GraphEngine
 import fitz
 import time
@@ -54,8 +54,8 @@ async def upload_pdf(request: Request, file: UploadFile = File(...)):
         raise HTTPException(400, "Only PDF files accepted")
     
     contents = await file.read()
-    if len(contents) > 10 * 1024 * 1024:
-        raise HTTPException(400, "File too large, max 10MB")
+    if len(contents) > 100 * 1024 * 1024:
+        raise HTTPException(400, "File too large, max 100MB")
         
     pdf = fitz.open(stream=contents, filetype="pdf")
     
@@ -101,7 +101,7 @@ async def upload_batch(request: Request, files: List[UploadFile] = File(...)):
         if not file.filename.endswith(".pdf"):
             continue
         contents = await file.read()
-        if len(contents) > 10 * 1024 * 1024:
+        if len(contents) > 100 * 1024 * 1024:
             continue
         pdf = fitz.open(stream=contents, filetype="pdf")
         text = ""
@@ -132,8 +132,8 @@ async def upload_batch(request: Request, files: List[UploadFile] = File(...)):
 @limiter.limit("30/minute")
 async def upload_audio(request: Request, file: UploadFile = File(...)):
     contents = await file.read()
-    if len(contents) > 25 * 1024 * 1024:
-        raise HTTPException(400, "File too large, max 25MB")
+    if len(contents) > 100 * 1024 * 1024:
+        raise HTTPException(400, "File too large, max 100MB")
         
     result = transcribe_audio(contents, file.filename)
     
@@ -149,6 +149,34 @@ async def upload_audio(request: Request, file: UploadFile = File(...)):
             "success": True,
             "transcript": result["transcript"],
             "entities_found": len(extract_result.get("entities", [])),
+        }
+    else:
+        raise HTTPException(500, result["error"])
+
+@app.post("/upload-video")
+@limiter.limit("30/minute")
+async def upload_video(request: Request, file: UploadFile = File(...)):
+    contents = await file.read()
+    if len(contents) > 100 * 1024 * 1024:
+        raise HTTPException(400, "File too large, max 100MB")
+    
+    mime_type = file.content_type if file.content_type else "video/mp4"
+    result = process_video(contents, file.filename, mime_type)
+    
+    if result["success"]:
+        extract_result = extract_entities(result["transcript"], file.filename)
+        
+        if extract_result["success"]:
+            graph.add_entities(extract_result["entities"], file.filename)
+            graph.add_relationships(extract_result["relationships"], file.filename)
+            stats["documents_processed"] += 1
+        
+        return {
+            "success": True,
+            "filename": file.filename,
+            "transcript": result["transcript"],
+            "entities_found": len(extract_result.get("entities", [])),
+            "relationships_found": len(extract_result.get("relationships", []))
         }
     else:
         raise HTTPException(500, result["error"])

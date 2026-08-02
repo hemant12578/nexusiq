@@ -98,6 +98,17 @@ Return JSON:
 }
 """
 
+VIDEO_PROMPT = """
+Analyze this compliance video recording. Transcribe the audio narration/speech and extract any compliance entities, policies, equipment names, or incidents mentioned in the video.
+
+Return JSON:
+{
+  "transcript": "full transcribed text from speech/narration in the video",
+  "entities": ["list", "of", "extracted", "entities"],
+  "summary": "brief summary of video content"
+}
+"""
+
 hallucination_stats = {'total_queries': 0, 'grounded': 0, 'refused': 0, 'unverified': 0}
 
 def get_hallucination_stats() -> dict:
@@ -285,6 +296,44 @@ def transcribe_audio(audio_bytes: bytes, filename: str) -> dict:
             "success": True,
             "transcript": raw_fallback,
             "entities": ["Audio Incident Log"]
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "transcript": ""
+        }
+
+def process_video(video_bytes: bytes, filename: str, mime_type: str = "video/mp4") -> dict:
+    try:
+        if GEMINI_KEY:
+            for model_name in GEMINI_MODELS:
+                try:
+                    model = genai.GenerativeModel(model_name)
+                    video_part = {
+                        "mime_type": mime_type if mime_type else "video/mp4",
+                        "data": video_bytes
+                    }
+                    response = model.generate_content([VIDEO_PROMPT, video_part])
+                    raw = response.text.strip()
+                    raw = re.sub(r"```json\s*", "", raw)
+                    raw = re.sub(r"```\s*", "", raw)
+                    data = json.loads(raw)
+                    return {
+                        "success": True,
+                        "transcript": data.get("transcript", "") or data.get("summary", ""),
+                        "entities": data.get("entities", [])
+                    }
+                except Exception as e:
+                    print(f"[Gemini Video Failed - {model_name}]: {e}")
+                    continue
+
+        fallback_prompt = f"Compliance video recording file name: {filename}. Extract video transcript and compliance summary."
+        raw_fallback = generate_text_response(fallback_prompt)
+        return {
+            "success": True,
+            "transcript": raw_fallback,
+            "entities": ["Video Asset Log"]
         }
     except Exception as e:
         return {
