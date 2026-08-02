@@ -20,8 +20,10 @@ GEMINI_MODELS = [
     "gemini-1.5-pro",
 ]
 
-# OpenRouter Free Models (verified free endpoints)
+# OpenRouter Free Models (verified active free endpoints)
 OPENROUTER_FREE_MODELS = [
+    "inclusionai/ling-3.0-flash:free",
+    "nvidia/nemotron-3-ultra:free",
     "openrouter/free",
     "google/gemini-2.0-flash-exp:free",
     "meta-llama/llama-3.3-70b-instruct:free",
