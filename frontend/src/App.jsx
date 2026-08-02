@@ -19,7 +19,13 @@ export default function App() {
   const [user, setUser] = useState(() => {
     try {
       const saved = localStorage.getItem('nexusiq_user')
-      return saved ? JSON.parse(saved) : null
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (parsed && typeof parsed === 'object' && parsed.email) {
+          return parsed
+        }
+      }
+      return null
     } catch (e) {
       return null
     }

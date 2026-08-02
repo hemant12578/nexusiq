@@ -210,8 +210,8 @@ ${reportData.audit_verdict}
           {user ? (
             <div className="flex items-center gap-3">
               <div className="text-right">
-                <div className="text-xs font-semibold text-gray-200 truncate max-w-[140px]">{user.email.split("@")[0]}</div>
-                <div className="text-[10px] text-purple-400 font-medium uppercase tracking-wider">{user.role}</div>
+                <div className="text-xs font-semibold text-gray-200 truncate max-w-[140px]">{user?.email ? user.email.split("@")[0] : "Officer"}</div>
+                <div className="text-[10px] text-purple-400 font-medium uppercase tracking-wider">{user?.role || "officer"}</div>
               </div>
               <button
                 onClick={() => { signOut(auth); onLogout(); navigate('/'); }}
