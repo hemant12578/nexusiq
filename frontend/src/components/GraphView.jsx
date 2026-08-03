@@ -130,16 +130,10 @@ export default function GraphView({ graphData, onNodeClick, onClearGraph }) {
       .data(links)
       .join("line")
       .attr("stroke", "#7c3aed")
-      .attr("stroke-opacity", 0)
+      .attr("stroke-opacity", 0.3)
       .attr("stroke-width", 1.5)
       .attr("stroke-dasharray", "6 3")
       .attr("marker-end", "url(#arrow)")
-
-
-    link.transition()
-      .delay((d, i) => 300 + i * 50)
-      .duration(600)
-      .attr("stroke-opacity", 0.3)
 
 
     function animateDash() {
