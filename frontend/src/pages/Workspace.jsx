@@ -13,6 +13,7 @@ export default function Workspace({ API, graphData, stats, loading, setLoading, 
   const [rpiSending, setRpiSending] = useState(false)
   const [rpiToast, setRpiToast] = useState(null)
   const [activityRefreshKey, setActivityRefreshKey] = useState(0)
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
 
   const wrappedHandleUploadSuccess = () => {
     handleUploadSuccess()
@@ -66,8 +67,13 @@ export default function Workspace({ API, graphData, stats, loading, setLoading, 
     }
   }
 
-  const handleClearGraph = async () => {
-    if (!window.confirm("Are you sure you want to clear all nodes and reset the compliance knowledge graph?")) return
+  const handleClearGraphClick = () => {
+    setShowClearConfirm(true)
+  }
+
+  const executeClearGraph = async () => {
+    setShowClearConfirm(false)
+    setLoading(true)
     try {
       const baseUrl = getApiUrl(API)
       await axios.post(`${baseUrl}/clear-graph`)
@@ -76,6 +82,8 @@ export default function Workspace({ API, graphData, stats, loading, setLoading, 
       fetchStats()
     } catch (err) {
       console.error("Failed to clear graph:", err)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -135,7 +143,7 @@ export default function Workspace({ API, graphData, stats, loading, setLoading, 
           <GraphView
             graphData={graphData}
             onNodeClick={setSelectedNode}
-            onClearGraph={handleClearGraph}
+            onClearGraph={handleClearGraphClick}
           />
 
 
@@ -182,6 +190,32 @@ export default function Workspace({ API, graphData, stats, loading, setLoading, 
           <ActivityFeed user={user} refreshKey={activityRefreshKey} />
         </div>
       </div>
+
+      {showClearConfirm && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-nexus-800 border border-red-500/30 rounded-2xl p-6 shadow-2xl max-w-sm w-full glow-border">
+            <h3 className="text-xl font-bold text-gray-100 mb-2">Clear Knowledge Graph?</h3>
+            <p className="text-sm text-gray-400 mb-6">
+              This action will permanently delete all nodes and relationships. This cannot be undone. Are you sure?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowClearConfirm(false)}
+                className="px-4 py-2 rounded-xl text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={executeClearGraph}
+                className="px-4 py-2 rounded-xl text-sm font-bold bg-red-600/80 hover:bg-red-500 text-white shadow-lg shadow-red-900/50 transition-colors"
+              >
+                Yes, clear it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }
