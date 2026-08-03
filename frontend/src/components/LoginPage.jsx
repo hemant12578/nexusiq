@@ -7,7 +7,7 @@ import { saveUserProfile } from "../services/firestoreService"
 export default function LoginPage({ onLoginSuccess }) {
   const navigate = useNavigate()
   const [role, setRole] = useState("officer")
-  const [email, setEmail] = useState("judges@innovahack.com")
+  const [email, setEmail] = useState("judges@innovahack.in")
   const [password, setPassword] = useState("judges123")
   const [scanning, setScanning] = useState(false)
   const [authed, setAuthed] = useState(false)
