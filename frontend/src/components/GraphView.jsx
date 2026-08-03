@@ -67,7 +67,11 @@ export default function GraphView({ graphData, onNodeClick, onClearGraph }) {
     fmStrong.append("feMergeNode").attr("in", "SourceGraphic")
 
     const nodes = safeNodes.map((d) => ({ ...d }))
-    const edges = safeEdges.map((d) => ({ ...d }))
+    
+    const validNodeIds = new Set(nodes.map(n => n.id))
+    const edges = safeEdges
+      .filter(e => validNodeIds.has(e.source) && validNodeIds.has(e.target))
+      .map((d) => ({ ...d }))
 
     const zoomGroup = svg.append("g")
 
