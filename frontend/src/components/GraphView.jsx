@@ -17,11 +17,14 @@ export default function GraphView({ graphData, onNodeClick, onClearGraph }) {
   const svgRef = useRef(null)
   const simulationRef = useRef(null)
 
+  const safeNodes = Array.isArray(graphData?.nodes) ? graphData.nodes : []
+  const safeEdges = Array.isArray(graphData?.edges) ? graphData.edges : []
+
   const lastCountRef = useRef({ nodes: 0, edges: 0 })
 
   useEffect(() => {
     if (!svgRef.current) return
-    const newCount = { nodes: graphData.nodes.length, edges: graphData.edges.length }
+    const newCount = { nodes: safeNodes.length, edges: safeEdges.length }
     if (newCount.nodes === lastCountRef.current.nodes && newCount.edges === lastCountRef.current.edges) return
     lastCountRef.current = newCount
 
@@ -31,10 +34,10 @@ export default function GraphView({ graphData, onNodeClick, onClearGraph }) {
 
     d3.select(svgRef.current).selectAll("*").remove()
 
-    if (!graphData.nodes.length) return
+    if (!safeNodes.length) return
 
-    const width = svgRef.current.clientWidth
-    const height = svgRef.current.clientHeight
+    const width = svgRef.current.clientWidth || 800
+    const height = svgRef.current.clientHeight || 600
 
     const svg = d3.select(svgRef.current)
       .attr("width", width)
@@ -63,8 +66,8 @@ export default function GraphView({ graphData, onNodeClick, onClearGraph }) {
     fmStrong.append("feMergeNode").attr("in", "coloredBlur")
     fmStrong.append("feMergeNode").attr("in", "SourceGraphic")
 
-    const nodes = graphData.nodes.map((d) => ({ ...d }))
-    const edges = graphData.edges.map((d) => ({ ...d }))
+    const nodes = safeNodes.map((d) => ({ ...d }))
+    const edges = safeEdges.map((d) => ({ ...d }))
 
     const zoomGroup = svg.append("g")
 
@@ -96,7 +99,7 @@ export default function GraphView({ graphData, onNodeClick, onClearGraph }) {
       .data(edges)
       .enter()
       .append("text")
-      .text((d) => d.relation)
+      .text((d) => d.relation || '')
       .attr("fill", "#6b7280")
       .attr("font-size", "8px")
       .attr("font-family", "monospace")
@@ -129,7 +132,7 @@ export default function GraphView({ graphData, onNodeClick, onClearGraph }) {
       )
       .on("click", (event, d) => {
         event.stopPropagation()
-        onNodeClick(d)
+        if (onNodeClick) onNodeClick(d)
       })
 
     node.append("circle")
@@ -150,7 +153,7 @@ export default function GraphView({ graphData, onNodeClick, onClearGraph }) {
       .attr("filter", "url(#glow-strong)")
 
     node.append("text")
-      .text((d) => d.name)
+      .text((d) => d.name || d.id || '')
       .attr("dy", (d) => 26 + Math.min((d.connections || 0) * 2, 10))
       .attr("text-anchor", "middle")
       .attr("fill", "#e2e8f0")
@@ -159,7 +162,7 @@ export default function GraphView({ graphData, onNodeClick, onClearGraph }) {
       .attr("font-family", "sans-serif")
 
     node.append("title")
-      .text((d) => `${d.name} (${d.type})\nSource: ${d.source || 'Unknown'}\nConnections: ${d.connections || 0}`)
+      .text((d) => `${d.name || d.id} (${d.type || 'unknown'})\nSource: ${d.source || 'Unknown'}\nConnections: ${d.connections || 0}`)
 
     simulation.on("tick", () => {
       link
@@ -178,7 +181,7 @@ export default function GraphView({ graphData, onNodeClick, onClearGraph }) {
     return () => {
       simulation.stop()
     }
-  }, [graphData, onNodeClick])
+  }, [graphData, onNodeClick, safeNodes.length, safeEdges.length])
 
   const handleExport = () => {
     const svgElement = svgRef.current;
@@ -220,7 +223,7 @@ export default function GraphView({ graphData, onNodeClick, onClearGraph }) {
   return (
     <div className="relative w-full h-full">
       {/* 7-Type Node Color Legend Overlay & Actions */}
-      {graphData.nodes.length > 0 && (
+      {safeNodes.length > 0 && (
         <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
           <div className="flex items-center gap-2">
             <button 

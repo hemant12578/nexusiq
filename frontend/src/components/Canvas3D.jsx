@@ -7,23 +7,24 @@ export default function Canvas3D() {
   useEffect(() => {
     if (!containerRef.current) return
 
+    let animationFrameId = null
+    let renderer = null
 
-    const scene = new THREE.Scene()
-    
+    try {
+      const scene = new THREE.Scene()
 
-    const camera = new THREE.PerspectiveCamera(
-      60,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      1000
-    )
-    camera.position.z = 300
+      const camera = new THREE.PerspectiveCamera(
+        60,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      )
+      camera.position.z = 300
 
-
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
-    renderer.setSize(window.innerWidth, window.innerHeight)
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-    containerRef.current.appendChild(renderer.domElement)
+      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
+      renderer.setSize(window.innerWidth, window.innerHeight)
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+      containerRef.current.appendChild(renderer.domElement)
 
 
     // Initialize particle system parameters
@@ -162,19 +163,24 @@ export default function Canvas3D() {
     }
 
     animate()
+    } catch (e) {
+      console.warn("Canvas3D Three.js error caught gracefully:", e)
+    }
 
     return () => {
       window.removeEventListener("mousemove", handleMouseMove)
       window.removeEventListener("resize", handleResize)
-      cancelAnimationFrame(animationFrameId)
-      if (containerRef.current && renderer.domElement) {
-        containerRef.current.removeChild(renderer.domElement)
+      if (animationFrameId) cancelAnimationFrame(animationFrameId)
+      if (containerRef.current && renderer && renderer.domElement) {
+        try { containerRef.current.removeChild(renderer.domElement) } catch (e) {}
       }
-      geometry.dispose()
-      material.dispose()
-      lineGeometry.dispose()
-      lineMaterial.dispose()
-      renderer.dispose()
+      try {
+        if (geometry) geometry.dispose()
+        if (material) material.dispose()
+        if (lineGeometry) lineGeometry.dispose()
+        if (lineMaterial) lineMaterial.dispose()
+        if (renderer) renderer.dispose()
+      } catch (e) {}
     }
   }, [])
 
