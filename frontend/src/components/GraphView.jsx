@@ -112,8 +112,9 @@ export default function GraphView({ graphData, onNodeClick, onClearGraph }) {
 
     const links = safeEdges
       .map(e => {
-        const rawSource = String(e.source || e.from).toLowerCase().trim()
-        const rawTarget = String(e.target || e.to).toLowerCase().trim()
+        // e.source is the document name from backend, DO NOT USE IT for node matching. Use e.from.
+        const rawSource = String(e.from).toLowerCase().trim()
+        const rawTarget = String(e.to).toLowerCase().trim()
         return {
           source: nodeIdMap.get(rawSource),
           target: nodeIdMap.get(rawTarget),
@@ -139,8 +140,8 @@ export default function GraphView({ graphData, onNodeClick, onClearGraph }) {
       .data(links)
       .join("line")
       .attr("stroke", "#7c3aed")
-      .attr("stroke-opacity", 0.3)
-      .attr("stroke-width", 1.5)
+      .attr("stroke-opacity", 0.4) // Slightly more visible
+      .attr("stroke-width", 1.8) // Slightly thicker
       .attr("stroke-dasharray", "6 3")
       .attr("marker-end", "url(#arrow)")
 
@@ -148,7 +149,7 @@ export default function GraphView({ graphData, onNodeClick, onClearGraph }) {
     function animateDash() {
       link
         .attr("stroke-dashoffset", 0)
-        .transition()
+        .transition("dashAnim")
         .duration(3000)
         .ease(d3.easeLinear)
         .attr("stroke-dashoffset", -18)
@@ -250,37 +251,37 @@ export default function GraphView({ graphData, onNodeClick, onClearGraph }) {
       })
       .on("mouseover", function(event, d) {
         d3.select(this)
-          .transition().duration(200)
+          .transition("nodeHover").duration(200)
           .attr("r", (14 + Math.min(d.connections || 0, 6) * 1.5) + 5)
           .attr("fill-opacity", 1)
           .attr("filter", "url(#glow-strong)")
           .attr("stroke-width", 3)
 
 
-        link.transition().duration(200)
+        link.transition("hoverAnim").duration(200)
           .attr("stroke-opacity", l =>
             l.source.id === d.id || l.target.id === d.id ? 0.7 : 0.1
           )
           .attr("stroke-width", l =>
-            l.source.id === d.id || l.target.id === d.id ? 2.5 : 1
+            l.source.id === d.id || l.target.id === d.id ? 2.5 : 1.8
           )
-        linkLabel.transition().duration(200)
+        linkLabel.transition("labelHover").duration(200)
           .attr("fill-opacity", l =>
             l.source.id === d.id || l.target.id === d.id ? 0.9 : 0.15
           )
       })
       .on("mouseout", function(event, d) {
         d3.select(this)
-          .transition().duration(300)
+          .transition("nodeHover").duration(300)
           .attr("r", 14 + Math.min(d.connections || 0, 6) * 1.5)
           .attr("fill-opacity", 0.9)
           .attr("filter", "url(#glow-soft)")
           .attr("stroke-width", 2)
 
-        link.transition().duration(300)
-          .attr("stroke-opacity", 0.3)
-          .attr("stroke-width", 1.5)
-        linkLabel.transition().duration(300)
+        link.transition("hoverAnim").duration(300)
+          .attr("stroke-opacity", 0.4)
+          .attr("stroke-width", 1.8)
+        linkLabel.transition("labelHover").duration(300)
           .attr("fill-opacity", 0.5)
       })
       .call(
