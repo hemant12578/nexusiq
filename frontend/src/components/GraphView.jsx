@@ -104,14 +104,23 @@ export default function GraphView({ graphData, onNodeClick, onClearGraph }) {
     )
 
     const nodes = safeNodes.map(n => ({ ...n }))
-    const nodeIds = new Set(nodes.map(n => n.id))
+    
+    const nodeIdMap = new Map()
+    nodes.forEach(n => {
+      nodeIdMap.set(String(n.id).toLowerCase().trim(), n.id)
+    })
+
     const links = safeEdges
-      .filter(e => nodeIds.has(e.source || e.from) && nodeIds.has(e.target || e.to))
-      .map(e => ({
-        source: e.source || e.from,
-        target: e.target || e.to,
-        relation: e.relation
-      }))
+      .map(e => {
+        const rawSource = String(e.source || e.from).toLowerCase().trim()
+        const rawTarget = String(e.target || e.to).toLowerCase().trim()
+        return {
+          source: nodeIdMap.get(rawSource),
+          target: nodeIdMap.get(rawTarget),
+          relation: e.relation
+        }
+      })
+      .filter(e => e.source !== undefined && e.target !== undefined)
 
     // Configure D3 force simulation parameters
     const simulation = d3.forceSimulation(nodes)
