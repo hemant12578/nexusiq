@@ -242,10 +242,31 @@ def upload_text(request: Request, data: TextInput):
         raise HTTPException(500, result["error"])
 
 @app.get("/graph")
+@app.get("/graph/")
 def get_graph():
     return graph.get_graph_json()
 
+class DeleteNodeInput(BaseModel):
+    node_id: str
+
+@app.post("/delete-node")
+@app.post("/delete-node/")
+def delete_node_endpoint(data: DeleteNodeInput):
+    success = graph.delete_node(data.node_id)
+    if success:
+        sse_events.append({'type': 'delete', 'node_id': data.node_id, 'timestamp': time.time()})
+    return {"success": success, "node_id": data.node_id}
+
+@app.post("/clear-graph")
+@app.post("/clear-graph/")
+def clear_graph_endpoint():
+    graph.clear()
+    stats["documents_processed"] = 0
+    sse_events.append({'type': 'clear', 'timestamp': time.time()})
+    return {"success": True, "message": "Graph cleared successfully"}
+
 @app.get("/export-graph")
+@app.get("/export-graph/")
 def export_graph():
     return graph.get_graph_json()
 

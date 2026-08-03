@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react"
 import * as d3 from "d3"
+import { Trash2 } from "lucide-react"
 
 const NODE_COLORS = {
   person: "#00ff88",
@@ -12,7 +13,7 @@ const NODE_COLORS = {
   unknown: "#6b7280"
 } // Define node colors for different entity types
 
-export default function GraphView({ graphData, onNodeClick }) {
+export default function GraphView({ graphData, onNodeClick, onClearGraph }) {
   const svgRef = useRef(null)
   const simulationRef = useRef(null)
 
@@ -41,7 +42,6 @@ export default function GraphView({ graphData, onNodeClick }) {
 
     const defs = svg.append("defs")
 
-
     const radialGrad = defs.append("radialGradient")
       .attr("id", "bgGlow")
       .attr("cx", "50%").attr("cy", "50%").attr("r", "50%")
@@ -51,295 +51,140 @@ export default function GraphView({ graphData, onNodeClick }) {
       .attr("width", width).attr("height", height)
       .attr("fill", "url(#bgGlow)")
 
-
     const filterSoft = defs.append("filter").attr("id", "glow-soft")
-    // Apply a soft glow filter for node highlighting
     filterSoft.append("feGaussianBlur").attr("stdDeviation", "3").attr("result", "coloredBlur")
     const fmSoft = filterSoft.append("feMerge")
     fmSoft.append("feMergeNode").attr("in", "coloredBlur")
     fmSoft.append("feMergeNode").attr("in", "SourceGraphic")
 
-
     const filterStrong = defs.append("filter").attr("id", "glow-strong")
-    filterStrong.append("feGaussianBlur").attr("stdDeviation", "6").attr("result", "coloredBlur")
+    filterStrong.append("feGaussianBlur").attr("stdDeviation", "8").attr("result", "coloredBlur")
     const fmStrong = filterStrong.append("feMerge")
     fmStrong.append("feMergeNode").attr("in", "coloredBlur")
     fmStrong.append("feMergeNode").attr("in", "SourceGraphic")
 
+    const nodes = graphData.nodes.map((d) => ({ ...d }))
+    const edges = graphData.edges.map((d) => ({ ...d }))
 
-    const patternSize = 40
-    const gridPattern = defs.append("pattern")
-      .attr("id", "grid").attr("width", patternSize).attr("height", patternSize)
-      .attr("patternUnits", "userSpaceOnUse")
-    gridPattern.append("circle")
-      .attr("cx", patternSize/2).attr("cy", patternSize/2).attr("r", 0.5)
-      .attr("fill", "rgba(124,58,237,0.15)")
-    svg.append("rect")
-      .attr("width", width).attr("height", height)
-      .attr("fill", "url(#grid)")
-      .attr("opacity", 0.5)
+    const zoomGroup = svg.append("g")
 
+    const zoom = d3.zoom()
+      .scaleExtent([0.1, 8])
+      .on("zoom", (event) => zoomGroup.attr("transform", event.transform))
 
-    defs.append("marker")
-      .attr("id", "arrow")
-      .attr("viewBox", "0 -5 10 10")
-      .attr("refX", 24).attr("refY", 0)
-      .attr("markerWidth", 6).attr("markerHeight", 6)
-      .attr("orient", "auto")
-      .append("path")
-      .attr("d", "M0,-5L10,0L0,5")
-      .attr("fill", "#7c3aed")
-      .attr("fill-opacity", 0.5)
+    svg.call(zoom)
 
-    const g = svg.append("g")
-
-    svg.call(
-      d3.zoom()
-        .scaleExtent([0.1, 4])
-        .on("zoom", (event) => g.attr("transform", event.transform))
-    )
-
-    const nodes = graphData.nodes.map(n => ({ ...n }))
-    const nodeIds = new Set(nodes.map(n => n.id))
-    const links = graphData.edges
-      .filter(e => nodeIds.has(e.from) && nodeIds.has(e.to))
-      .map(e => ({
-        source: e.from,
-        target: e.to,
-        relation: e.relation
-      }))
-
-    // Configure D3 force simulation parameters
     const simulation = d3.forceSimulation(nodes)
-      .force("link", d3.forceLink(links).id(d => d.id).distance(150))
-      .force("charge", d3.forceManyBody().strength(-600))
+      .force("link", d3.forceLink(edges).id((d) => d.id).distance(120))
+      .force("charge", d3.forceManyBody().strength(-350))
       .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("collision", d3.forceCollide(50))
-      .force("x", d3.forceX(width / 2).strength(0.03))
-      .force("y", d3.forceY(height / 2).strength(0.03))
+      .force("collision", d3.forceCollide().radius(40))
 
     simulationRef.current = simulation
 
+    const edgeGroup = zoomGroup.append("g").attr("class", "edges")
 
-    const link = g.append("g")
-      .selectAll("line")
-      .data(links)
-      .join("line")
-      .attr("stroke", "#7c3aed")
-      .attr("stroke-opacity", 0)
+    const link = edgeGroup.selectAll("line")
+      .data(edges)
+      .enter()
+      .append("line")
+      .attr("stroke", "rgba(167, 139, 250, 0.25)")
       .attr("stroke-width", 1.5)
-      .attr("stroke-dasharray", "6 3")
-      .attr("marker-end", "url(#arrow)")
+      .attr("stroke-dasharray", "4,2")
 
-
-    link.transition()
-      .delay((d, i) => 300 + i * 50)
-      .duration(600)
-      .attr("stroke-opacity", 0.3)
-
-
-    function animateDash() {
-      link
-        .attr("stroke-dashoffset", 0)
-        .transition()
-        .duration(3000)
-        .ease(d3.easeLinear)
-        .attr("stroke-dashoffset", -18)
-        .on("end", animateDash)
-    }
-    animateDash()
-
-
-    const linkLabel = g.append("g")
-      .selectAll("text")
-      .data(links)
-      .join("text")
-      .text(d => d.relation)
-      .attr("font-size", "7px")
-      .attr("fill", "#a78bfa")
-      .attr("fill-opacity", 0)
+    const edgeLabels = edgeGroup.selectAll("text")
+      .data(edges)
+      .enter()
+      .append("text")
+      .text((d) => d.relation)
+      .attr("fill", "#6b7280")
+      .attr("font-size", "8px")
+      .attr("font-family", "monospace")
       .attr("text-anchor", "middle")
-      .attr("font-family", "Inter, sans-serif")
-      .attr("font-weight", 400)
+      .attr("dy", -4)
 
-    linkLabel.transition()
-      .delay((d, i) => 600 + i * 50)
-      .duration(400)
-      .attr("fill-opacity", 0.5)
+    const nodeGroup = zoomGroup.append("g").attr("class", "nodes")
 
-
-    const nodeGlow = g.append("g")
-      .selectAll("circle")
+    const node = nodeGroup.selectAll("g")
       .data(nodes)
-      .join("circle")
-      .attr("r", 0)
-      .attr("fill", "none")
-      .attr("stroke", d => NODE_COLORS[d.type?.toLowerCase()] || NODE_COLORS[d.type] || NODE_COLORS.unknown)
-      .attr("stroke-opacity", 0.12)
-      .attr("stroke-width", 5)
-      .attr("filter", "url(#glow-soft)")
-
-
-    nodeGlow.transition()
-      .delay((d, i) => i * 80)
-      .duration(800)
-      .ease(d3.easeElasticOut.amplitude(1).period(0.5))
-      .attr("r", 24)
-
-
-    function breathe() {
-      nodeGlow
-        .transition()
-        .duration(2500)
-        .ease(d3.easeSinInOut)
-        .attr("r", 27)
-        .attr("stroke-opacity", 0.2)
-        .transition()
-        .duration(2500)
-        .ease(d3.easeSinInOut)
-        .attr("r", 24)
-        .attr("stroke-opacity", 0.12)
-        .on("end", breathe)
-    }
-    setTimeout(breathe, 1500)
-
-
-    const node = g.append("g")
-      .selectAll("circle")
-      .data(nodes)
-      .join("circle")
-      .attr("r", 0)
-      .attr("fill", d => NODE_COLORS[d.type?.toLowerCase()] || NODE_COLORS[d.type] || NODE_COLORS.unknown)
-      .attr("fill-opacity", 0.9)
-      .attr("stroke", "rgba(255,255,255,0.15)")
-      .attr("stroke-width", 2)
-      .style("cursor", "pointer")
-      .attr("filter", "url(#glow-soft)")
-
-
-    node.transition()
-      .delay((d, i) => i * 60)
-      .duration(900)
-      .ease(d3.easeElasticOut.amplitude(1.1).period(0.4))
-      .attr("r", d => 14 + Math.min(d.connections || 0, 6) * 1.5)
-
-    node
-      .on("click", (event, d) => {
-
-        const clickCircle = g.append("circle")
-          .attr("cx", d.x).attr("cy", d.y)
-          .attr("r", 16)
-          .attr("fill", "none")
-          .attr("stroke", NODE_COLORS[d.type?.toLowerCase()] || NODE_COLORS[d.type] || "#7c3aed")
-          .attr("stroke-width", 2)
-          .attr("stroke-opacity", 0.8)
-        clickCircle.transition()
-          .duration(500)
-          .ease(d3.easeQuadOut)
-          .attr("r", 50)
-          .attr("stroke-opacity", 0)
-          .remove()
-        onNodeClick(d)
-      })
-      .on("mouseover", function(event, d) {
-        d3.select(this)
-          .transition().duration(200)
-          .attr("r", (14 + Math.min(d.connections || 0, 6) * 1.5) + 5)
-          .attr("fill-opacity", 1)
-          .attr("filter", "url(#glow-strong)")
-          .attr("stroke-width", 3)
-
-
-        link.transition().duration(200)
-          .attr("stroke-opacity", l =>
-            l.source.id === d.id || l.target.id === d.id ? 0.7 : 0.1
-          )
-          .attr("stroke-width", l =>
-            l.source.id === d.id || l.target.id === d.id ? 2.5 : 1
-          )
-        linkLabel.transition().duration(200)
-          .attr("fill-opacity", l =>
-            l.source.id === d.id || l.target.id === d.id ? 0.9 : 0.15
-          )
-      })
-      .on("mouseout", function(event, d) {
-        d3.select(this)
-          .transition().duration(300)
-          .attr("r", 14 + Math.min(d.connections || 0, 6) * 1.5)
-          .attr("fill-opacity", 0.9)
-          .attr("filter", "url(#glow-soft)")
-          .attr("stroke-width", 2)
-
-        link.transition().duration(300)
-          .attr("stroke-opacity", 0.3)
-          .attr("stroke-width", 1.5)
-        linkLabel.transition().duration(300)
-          .attr("fill-opacity", 0.5)
-      })
+      .enter()
+      .append("g")
+      .attr("cursor", "pointer")
       .call(
         d3.drag()
           .on("start", (event, d) => {
             if (!event.active) simulation.alphaTarget(0.3).restart()
-            d.fx = d.x; d.fy = d.y
+            d.fx = d.x
+            d.fy = d.y
           })
           .on("drag", (event, d) => {
-            d.fx = event.x; d.fy = event.y
+            d.fx = event.x
+            d.fy = event.y
           })
           .on("end", (event, d) => {
             if (!event.active) simulation.alphaTarget(0)
-            d.fx = null; d.fy = null
+            d.fx = null
+            d.fy = null
           })
       )
+      .on("click", (event, d) => {
+        event.stopPropagation()
+        onNodeClick(d)
+      })
 
+    node.append("circle")
+      .attr("r", (d) => 16 + Math.min((d.connections || 0) * 3, 16))
+      .attr("fill", (d) => NODE_COLORS[d.type] || NODE_COLORS.unknown)
+      .attr("fill-opacity", 0.15)
+      .attr("stroke", (d) => NODE_COLORS[d.type] || NODE_COLORS.unknown)
+      .attr("stroke-opacity", 0.4)
+      .attr("stroke-width", 1)
+      .attr("filter", "url(#glow-soft)")
 
-    const label = g.append("g")
-      .selectAll("text")
-      .data(nodes)
-      .join("text")
-      .text(d => d.name.length > 16 ? d.name.substring(0, 16) + "…" : d.name)
-      .attr("font-size", "10px")
-      .attr("fill", "#e2e8f0")
-      .attr("fill-opacity", 0)
-      .attr("text-anchor", "middle")
-      .attr("dy", d => (14 + Math.min(d.connections || 0, 6) * 1.5) + 14)
-      .attr("font-family", "Inter, sans-serif")
-      .attr("font-weight", 500)
-      .style("pointer-events", "none")
-      .style("text-shadow", "0 2px 6px rgba(0,0,0,0.9)")
-
-    label.transition()
-      .delay((d, i) => 400 + i * 60)
-      .duration(500)
+    node.append("circle")
+      .attr("r", (d) => 10 + Math.min((d.connections || 0) * 2, 10))
+      .attr("fill", (d) => NODE_COLORS[d.type] || NODE_COLORS.unknown)
       .attr("fill-opacity", 0.85)
+      .attr("stroke", "#ffffff")
+      .attr("stroke-width", 1.5)
+      .attr("filter", "url(#glow-strong)")
 
+    node.append("text")
+      .text((d) => d.name)
+      .attr("dy", (d) => 26 + Math.min((d.connections || 0) * 2, 10))
+      .attr("text-anchor", "middle")
+      .attr("fill", "#e2e8f0")
+      .attr("font-size", "10px")
+      .attr("font-weight", "600")
+      .attr("font-family", "sans-serif")
+
+    node.append("title")
+      .text((d) => `${d.name} (${d.type})\nSource: ${d.source || 'Unknown'}\nConnections: ${d.connections || 0}`)
 
     simulation.on("tick", () => {
       link
-        .attr("x1", d => d.source.x).attr("y1", d => d.source.y)
-        .attr("x2", d => d.target.x).attr("y2", d => d.target.y)
+        .attr("x1", (d) => d.source.x)
+        .attr("y1", (d) => d.source.y)
+        .attr("x2", (d) => d.target.x)
+        .attr("y2", (d) => d.target.y)
 
-      linkLabel
-        .attr("x", d => (d.source.x + d.target.x) / 2)
-        .attr("y", d => (d.source.y + d.target.y) / 2)
+      edgeLabels
+        .attr("x", (d) => (d.source.x + d.target.x) / 2)
+        .attr("y", (d) => (d.source.y + d.target.y) / 2)
 
-      nodeGlow
-        .attr("cx", d => d.x).attr("cy", d => d.y)
-
-      node
-        .attr("cx", d => d.x).attr("cy", d => d.y)
-
-      label
-        .attr("x", d => d.x).attr("y", d => d.y)
+      node.attr("transform", (d) => `translate(${d.x},${d.y})`)
     })
 
-    return () => { simulation.stop() }
-  }, [graphData])
+    return () => {
+      simulation.stop()
+    }
+  }, [graphData, onNodeClick])
 
   const handleExport = () => {
-    if (!svgRef.current) return;
     const svgElement = svgRef.current;
-    const serializer = new XMLSerializer();
-    let source = serializer.serializeToString(svgElement);
+    if (!svgElement) return;
+
+    let source = new XMLSerializer().serializeToString(svgElement);
 
     if(!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)){
         source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
@@ -360,7 +205,7 @@ export default function GraphView({ graphData, onNodeClick }) {
 
     const img = new Image();
     img.onload = function() {
-        ctx.fillStyle = "#0f172a"; // Match slate-900 background roughly
+        ctx.fillStyle = "#0f172a";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0);
         const pngUrl = canvas.toDataURL("image/png");
@@ -374,15 +219,27 @@ export default function GraphView({ graphData, onNodeClick }) {
 
   return (
     <div className="relative w-full h-full">
-      {/* 7-Type Node Color Legend Overlay */}
+      {/* 7-Type Node Color Legend Overlay & Actions */}
       {graphData.nodes.length > 0 && (
         <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
-          <button 
-            onClick={handleExport}
-            className="px-3 py-1.5 text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 rounded-lg shadow transition-colors max-w-fit"
-          >
-            Export Graph
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={handleExport}
+              className="px-3 py-1.5 text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 rounded-lg shadow transition-colors"
+            >
+              Export Graph
+            </button>
+            {onClearGraph && (
+              <button 
+                onClick={onClearGraph}
+                className="px-3 py-1.5 text-xs font-semibold text-red-200 bg-red-950/70 hover:bg-red-900/90 border border-red-800/40 rounded-lg shadow transition-colors flex items-center gap-1.5"
+                title="Clear all nodes and reset knowledge graph"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                <span>Clear Graph</span>
+              </button>
+            )}
+          </div>
           <div className="bg-nexus-900/80 backdrop-blur-md p-3 rounded-xl border border-purple-900/40 shadow-xl flex flex-wrap items-center gap-3 max-w-md">
           {[
             { label: "Person", color: NODE_COLORS.person },

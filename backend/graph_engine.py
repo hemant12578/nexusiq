@@ -62,6 +62,14 @@ class GraphEngine:
                 )
         self.save_to_storage()
     
+    def delete_node(self, node_id: str) -> bool:
+        """Remove a specific node and its associated edges from NetworkX graph"""
+        if node_id in self.G:
+            self.G.remove_node(node_id)
+            self.save_to_storage()
+            return True
+        return False
+    
     def get_graph_json(self) -> Dict:
         """build the json blob for the frontend"""
         if len(self.G) == 0:

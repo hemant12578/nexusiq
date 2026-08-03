@@ -54,6 +54,31 @@ export default function Workspace({ API, graphData, stats, loading, setLoading, 
     }
   }
 
+  const handleDeleteNode = async (nodeId) => {
+    try {
+      const baseUrl = getApiUrl(API)
+      await axios.post(`${baseUrl}/delete-node`, { node_id: nodeId })
+      setSelectedNode(null)
+      fetchGraph()
+      fetchStats()
+    } catch (err) {
+      console.error("Failed to delete node:", err)
+    }
+  }
+
+  const handleClearGraph = async () => {
+    if (!window.confirm("Are you sure you want to clear all nodes and reset the compliance knowledge graph?")) return
+    try {
+      const baseUrl = getApiUrl(API)
+      await axios.post(`${baseUrl}/clear-graph`)
+      setSelectedNode(null)
+      fetchGraph()
+      fetchStats()
+    } catch (err) {
+      console.error("Failed to clear graph:", err)
+    }
+  }
+
   return (
     <div className="relative z-10 flex flex-col h-[calc(100vh-61px)] overflow-hidden">
       <StatsBar stats={stats} />
@@ -110,6 +135,7 @@ export default function Workspace({ API, graphData, stats, loading, setLoading, 
           <GraphView
             graphData={graphData}
             onNodeClick={setSelectedNode}
+            onClearGraph={handleClearGraph}
           />
 
 
@@ -144,7 +170,7 @@ export default function Workspace({ API, graphData, stats, loading, setLoading, 
 
 
           {selectedNode && (
-            <NodeDetail node={selectedNode} onClose={() => setSelectedNode(null)} />
+            <NodeDetail node={selectedNode} onClose={() => setSelectedNode(null)} onDeleteNode={handleDeleteNode} />
           )}
         </div>
 

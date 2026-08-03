@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { User, FileText, ShieldAlert, Calendar, Building2, Bookmark, MapPin, HelpCircle, X, Layers, Link2, Sparkles } from "lucide-react"
+import { User, FileText, ShieldAlert, Calendar, Building2, Bookmark, MapPin, HelpCircle, X, Layers, Link2, Sparkles, Trash2 } from "lucide-react"
 
 const NODE_COLORS = {
   person: "#00ff88",
@@ -23,9 +23,10 @@ const NODE_ICONS = {
   unknown: HelpCircle
 }
 
-export default function NodeDetail({ node, onClose }) {
+export default function NodeDetail({ node, onClose, onDeleteNode }) {
   // Manage component visibility for mount animations
   const [visible, setVisible] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true))
@@ -40,6 +41,15 @@ export default function NodeDetail({ node, onClose }) {
   const handleClose = () => {
     setVisible(false)
     setTimeout(onClose, 250)
+  }
+
+  const handleDelete = async () => {
+    if (deleting) return
+    setDeleting(true)
+    if (onDeleteNode) {
+      await onDeleteNode(node.id)
+    }
+    handleClose()
   }
 
   return (
@@ -63,8 +73,8 @@ export default function NodeDetail({ node, onClose }) {
               >
                 <IconComp className="w-5 h-5" />
               </div>
-              <div>
-                <div className="font-semibold text-white text-xs tracking-tight">{node.name}</div>
+              <div className="min-w-0 max-w-[170px]">
+                <div className="font-semibold text-white text-xs tracking-tight truncate">{node.name}</div>
                 <div
                   className="text-[10px] font-bold uppercase tracking-widest mt-0.5"
                   style={{ color }}
@@ -110,27 +120,39 @@ export default function NodeDetail({ node, onClose }) {
               <span className="text-[10px] text-gray-500 uppercase tracking-wider flex items-center gap-1">
                 <Layers className="w-3 h-3 text-purple-400" /> Node ID
               </span>
-              <span className="text-gray-500 font-mono text-[10px]">{node.id}</span>
+              <span className="text-gray-500 font-mono text-[10px] truncate max-w-[140px]">{node.id}</span>
             </div>
           </div>
 
+          <div className="pt-1 space-y-3">
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Connectivity</span>
+                <span className="text-[10px] text-purple-400 font-semibold font-mono">
+                  {Math.min((node.connections || 0) * 15, 100)}%
+                </span>
+              </div>
+              <div className="h-1.5 bg-nexus-700 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-1000 ease-out"
+                  style={{
+                    width: `${Math.min((node.connections || 0) * 15, 100)}%`,
+                    background: `linear-gradient(90deg, ${color}, ${color}80)`
+                  }}
+                />
+              </div>
+            </div>
 
-          <div className="pt-1">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Connectivity</span>
-              <span className="text-[10px] text-purple-400 font-semibold font-mono">
-                {Math.min((node.connections || 0) * 15, 100)}%
-              </span>
-            </div>
-            <div className="h-1.5 bg-nexus-700 rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all duration-1000 ease-out"
-                style={{
-                  width: `${Math.min((node.connections || 0) * 15, 100)}%`,
-                  background: `linear-gradient(90deg, ${color}, ${color}80)`
-                }}
-              />
-            </div>
+            {/* Remove Node Action Button */}
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="w-full py-2 px-3 rounded-xl bg-red-950/40 hover:bg-red-900/60 border border-red-800/40 text-red-300 hover:text-red-100 text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-md shadow-red-950/20 hover-lift disabled:opacity-50"
+              title="Remove this node and its connections from knowledge graph"
+            >
+              <Trash2 className="w-3.5 h-3.5 text-red-400" />
+              <span>{deleting ? "Removing..." : "Remove Node From Graph"}</span>
+            </button>
           </div>
         </div>
       </div>
