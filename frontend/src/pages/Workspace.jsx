@@ -10,49 +10,12 @@ import { BrainCircuit, FileUp, Mic, FileText, Cpu, Radio } from 'lucide-react'
 import { getApiUrl } from '../utils/api'
 
 export default function Workspace({ API, graphData, stats, loading, setLoading, selectedNode, setSelectedNode, fetchGraph, fetchStats, handleUploadSuccess, user }) {
-  const [rpiSending, setRpiSending] = useState(false)
-  const [rpiToast, setRpiToast] = useState(null)
   const [activityRefreshKey, setActivityRefreshKey] = useState(0)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
 
   const wrappedHandleUploadSuccess = () => {
     handleUploadSuccess()
     setActivityRefreshKey(prev => prev + 1)
-  }
-
-  // Simulate live edge-device incident ingestion
-  const sendRPiIncident = async () => {
-    setRpiSending(true)
-    setLoading(true)
-    try {
-      const time = new Date().toLocaleTimeString();
-      const incidents = [
-        `Unauthorized access to server room detected by RPi sensor node at ${time}. Employee badge scan failed. ISO 27001 Section 9.1 violation.`,
-        `Temperature anomaly detected in data center rack B7 by RPi thermal sensor at ${time}. Exceeds threshold. ISO 27001 A.11.1 physical security breach.`,
-        `Fire suppression system test triggered by RPi IoT node at ${time}. Compliance checkpoint logged. NIST SP 800-53 PE-13.`,
-        `Network intrusion attempt detected on perimeter by RPi edge node at ${time}. Blocked IP from blacklist. PCI DSS Requirement 1.1.`,
-        `Visitor without escort detected in restricted zone by RPi camera node at ${time}. HIPAA Physical Safeguard violation.`,
-        `Power backup UPS failure detected by RPi monitoring node at ${time}. Generator switchover delayed 3.2s. SOC 2 availability criteria A1.2.`
-      ];
-      // Randomly pick one incident
-      const randomIncident = incidents[Math.floor(Math.random() * incidents.length)];
-
-      const baseUrl = getApiUrl(API)
-      await axios.post(`${baseUrl}/upload-text`, {
-        text: `Live edge incident: ${randomIncident} Escalated to CISO.`,
-        source_name: "RPi_EdgeNode_Live"
-      })
-      setRpiToast("📡 RPi Edge Incident Synced to Graph!")
-      setTimeout(() => setRpiToast(null), 5000)
-      wrappedHandleUploadSuccess()
-    } catch (err) {
-      console.error("RPi simulation error:", err)
-      setRpiToast("⚠️ Failed to send RPi incident")
-      setTimeout(() => setRpiToast(null), 3000)
-    } finally {
-      setRpiSending(false)
-      setLoading(false)
-    }
   }
 
   const handleDeleteNode = async (nodeId) => {
@@ -104,25 +67,6 @@ export default function Workspace({ API, graphData, stats, loading, setLoading, 
 
 
         <div className="flex-1 relative overflow-hidden">
-          {/* RPi Live Simulation Button */}
-          <div className="absolute top-4 right-4 z-20 flex items-center gap-3">
-            {rpiToast && (
-              <div className="px-3 py-1.5 rounded-xl bg-emerald-950/90 border border-emerald-500/50 text-emerald-300 text-xs font-semibold shadow-lg backdrop-blur-md animate-fade-in flex items-center gap-2">
-                <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-                <span>{rpiToast}</span>
-              </div>
-            )}
-            <button
-              onClick={sendRPiIncident}
-              disabled={rpiSending}
-              className="px-4 py-2 bg-emerald-950/80 hover:bg-emerald-900/90 border border-emerald-500/40 rounded-xl text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-all flex items-center gap-2 shadow-lg shadow-emerald-950/50 hover-lift focus-glow disabled:opacity-50"
-              title="Simulate live Internet-of-Things (IoT) Raspberry Pi incident stream"
-            >
-              <Cpu className={`w-4 h-4 text-emerald-400 ${rpiSending ? 'animate-spin' : 'animate-pulse'}`} />
-              <span>{rpiSending ? "Transmitting..." : "Simulate RPi Input"}</span>
-            </button>
-          </div>
-
           {loading && (
             <div className="absolute inset-0 bg-black/60 backdrop-blur-md z-10 flex items-center justify-center animate-fade-in">
               <div className="flex flex-col items-center gap-4">

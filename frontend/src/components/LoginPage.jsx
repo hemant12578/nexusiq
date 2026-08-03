@@ -7,8 +7,8 @@ import { saveUserProfile } from "../services/firestoreService"
 export default function LoginPage({ onLoginSuccess }) {
   const navigate = useNavigate()
   const [role, setRole] = useState("officer")
-  const [email, setEmail] = useState("compliance.officer@nexusiq.enterprise")
-  const [password, setPassword] = useState("")
+  const [email, setEmail] = useState("judges@innovahack.com")
+  const [password, setPassword] = useState("judges123")
   const [scanning, setScanning] = useState(false)
   const [authed, setAuthed] = useState(false)
   const [firebaseStatus, setFirebaseStatus] = useState("")
@@ -54,17 +54,10 @@ export default function LoginPage({ onLoginSuccess }) {
       setFirebaseStatus("Authenticated")
       executeLoginSuccess({ email: res.user.email, role, uid: res.user.uid })
     } catch (err) {
-      // Handle authentication errors and fallback to local session if necessary
-      console.warn("Firebase auth failed, falling back to mock session", err)
-      setFirebaseStatus("Logged in")
-      executeLoginSuccess({ email, role, uid: 'demo-user-' + Date.now().toString(36) })
+      console.error("Firebase auth failed:", err)
+      setFirebaseStatus(err.message || "Authentication Failed")
+      setScanning(false)
     }
-  }
-
-  const handleQuickDemo = () => {
-    setScanning(true)
-    setFirebaseStatus("Officer Demo")
-    executeLoginSuccess({ email: "compliance.officer@nexusiq.enterprise", role: "officer", uid: "demo-officer-uid" })
   }
 
   const handleGoogleLogin = async () => {
@@ -74,8 +67,9 @@ export default function LoginPage({ onLoginSuccess }) {
       const result = await signInWithPopup(auth, googleProvider)
       executeLoginSuccess({ email: result.user.email, role: "officer", uid: result.user.uid })
     } catch (err) {
-      setFirebaseStatus("Demo Session")
-      executeLoginSuccess({ email: "google.demo@nexusiq.enterprise", role: "officer", uid: "google-demo-uid" })
+      console.error("Google login failed:", err)
+      setFirebaseStatus(err.message || "Google Login Failed")
+      setScanning(false)
     }
   }
 
@@ -95,8 +89,8 @@ export default function LoginPage({ onLoginSuccess }) {
           </div>
           <h1 className="text-2xl font-bold tracking-tight gradient-text">NexusIQ Portal</h1>
           <p className="text-xs text-gray-400 font-light">Compliance workspace login</p>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-950/40 border border-amber-500/30 text-amber-300 text-[10px] font-mono font-medium">
-            <span>Secure session</span>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-[10px] font-mono font-medium">
+            <span>Judge Credentials Pre-filled</span>
           </div>
         </div>
 
@@ -145,25 +139,13 @@ export default function LoginPage({ onLoginSuccess }) {
           <div className="space-y-2">
             <button
               type="button"
-              onClick={handleQuickDemo}
-              className="w-full py-3 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 rounded-xl font-bold text-xs uppercase tracking-wider text-white shadow-lg shadow-emerald-950/40 transition-all hover-lift flex items-center justify-center gap-2 group"
-            >
-              <Zap className="w-4 h-4 text-amber-300 fill-amber-300 animate-bounce" />
-              <span>Quick Demo Login</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-
+          <div className="grid grid-cols-1 gap-3 pt-2">
             <button
               type="button"
               onClick={handleGoogleLogin}
-              className="w-full py-2.5 bg-nexus-900/80 hover:bg-nexus-800 border border-purple-800/40 rounded-xl text-xs font-semibold text-gray-200 transition-all hover-lift flex items-center justify-center gap-2"
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white hover:bg-gray-100 text-gray-900 rounded-xl font-bold text-sm transition-all hover-lift"
             >
-              <svg className="w-4 h-4" viewBox="0 0 24 24">
-                <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z" />
-                <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z" />
-                <path fill="#FBBC05" d="M5.6 14.8c-.3-.8-.4-1.8-.4-2.8s.1-2 .4-2.8L1.9 6.3C.7 8.7 0 10.3 0 12s.7 3.3 1.9 5.7l3.7-2.9z" />
-                <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.4-6.4-5.2L1.9 16c1.8 3.7 5.6 7 10.1 7z" />
-              </svg>
+              <svg className="w-4 h-4" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" /><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" /><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" /><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" /></svg>
               <span>Sign in with Google</span>
             </button>
           </div>
