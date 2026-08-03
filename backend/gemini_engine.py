@@ -267,7 +267,7 @@ def extract_entities(text: str, filename: str) -> dict:
 def query_lyzr_webhook(user_question: str, networkx_retrieved_data: str) -> dict:
     lyzr_url = os.getenv("LYZR_WEBHOOK_URL", "https://inference.studio.lyzr.ai/api/workflows/execute")
     lyzr_api_key = os.getenv("LYZR_API_KEY", "")
-    lyzr_secret = os.getenv("LYZR_WEBHOOK_SECRET", "192a9b3bbf466f491087ec63da63c48d199adf3dec00535585f3662712002af0")
+    lyzr_secret = os.getenv("LYZR_WEBHOOK_SECRET", "")
 
     headers = {
         "x-api-key": lyzr_api_key,
@@ -286,7 +286,7 @@ def query_lyzr_webhook(user_question: str, networkx_retrieved_data: str) -> dict
             }
         ]
     }
-    workflow_id = os.getenv("LYZR_WORKFLOW_ID", "90e58378-39e3-464e-857d-d2a6fa54adb2")
+    workflow_id = os.getenv("LYZR_WORKFLOW_ID", "")
     if workflow_id:
         payload["workflow_id"] = workflow_id
 
