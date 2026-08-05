@@ -225,6 +225,7 @@ Global GRC (Governance, Risk, and Compliance) software market is projected to re
 
 - **Hemant Prakash** — Lead Full Stack Engineer, AI Orchestration, and IoT Hardware Integration.
 - **Shubham Kumar** — QA, System Testing, and Deployment Architecture.
+- **Sumit Sharan** — Professional Developer.
 - **[Mama Ji Name]** — Senior Engineering Advisor and Presentation Lead.
 
 ---

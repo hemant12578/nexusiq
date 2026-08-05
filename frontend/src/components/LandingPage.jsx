@@ -458,6 +458,10 @@ export default function LandingPage({ user }) {
                   <span className="font-semibold text-purple-300">Shubham Kumar</span>
                   <span className="text-gray-500"> — QA & System Testing</span>
                 </div>
+                <div className="text-xs text-gray-300">
+                  <span className="font-semibold text-purple-300">Sumit Sharan</span>
+                  <span className="text-gray-500"> — Professional Developer</span>
+                </div>
               </div>
             </div>
           </div>
