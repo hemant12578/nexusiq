@@ -16,10 +16,11 @@ backend/.env
 frontend/.env
 frontend/.env.*
 
-# Internal documents
+# Internal documents & generated PDFs
 PRD.MD
 prd.md
 *.prd
+*.pdf
 
 # Build outputs
 frontend/dist/
