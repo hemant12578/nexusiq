@@ -34,7 +34,7 @@ CISOs, Compliance Officers, and IT Security Teams at mid-to-large enterprises un
 | PageRank algorithm on nodes | FULLY WORKING | Calculates node centrality/importance scores. |
 | Graph RAG query engine | FULLY WORKING | Grounds LLM responses strictly against the NetworkX subgraph. |
 | Canonical entity deduplication | FULLY WORKING | Merges duplicate entities based on normalized IDs. |
-| Contradiction detection | PARTIAL | Basic collision detection in relationships, pending deeper AI semantic logic. |
+| Contradiction detection | FULLY WORKING | Resolves conflict assertions and flags opposing relationships in graph. |
 | SSE real-time streaming | FULLY WORKING | Streams graph updates to connected clients. |
 | Razorpay payment HMAC-SHA256 | FULLY WORKING | Validates webhook signatures for Pro subscription upgrades. |
 | Rate limiting SlowAPI | FULLY WORKING | Protects endpoints against DDOS or spam. |
