@@ -365,7 +365,7 @@ NexusIQ/
 |---|---|
 | **Hemant Prakash** | Lead Full Stack & AI Architect |
 | **Shubham Kumar** | QA & System Testing |
-| **Sumit Sharan** | Professional Developer |
+| **Sumit Sharan** | Senior Engineering Advisor & Developer |
 
 Contact: h9696838@gmail.com
 

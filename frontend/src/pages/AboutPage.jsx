@@ -225,7 +225,7 @@ export default function AboutPage() {
   const team = [
     { name: "Hemant Prakash", role: "Lead Full Stack & AI Architect", skills: ["React", "FastAPI", "Three.js", "Gemini"] },
     { name: "Shubham Kumar", role: "QA & System Testing", skills: ["System Testing", "QA Audit", "Validation"] },
-    { name: "Sumit Sharan", role: "Professional Developer", skills: ["Development", "Integration", "Code Quality"] }
+    { name: "Sumit Sharan", role: "Senior Engineering Advisor & Developer", skills: ["Architecture", "System Advisor", "Code Quality"] }
   ]
 
   return (
