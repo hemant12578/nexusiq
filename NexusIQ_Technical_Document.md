@@ -39,7 +39,7 @@ CISOs, Compliance Officers, and IT Security Teams at mid-to-large enterprises un
 | Razorpay payment HMAC-SHA256 | FULLY WORKING | Validates webhook signatures for Pro subscription upgrades. |
 | Rate limiting SlowAPI | FULLY WORKING | Protects endpoints against DDOS or spam. |
 | Audit report export | FULLY WORKING | Generates a markdown compliance brief detailing current graph state. |
-| Graph persistence Supabase | FULLY WORKING | Backs up the NetworkX state to Supabase Postgres. |
+| Graph persistence Supabase | FULLY WORKING | Live PostgreSQL graph persistence via Supabase (`tahskdacogqvuyqsvbwq.supabase.co`). |
 | Multi-model AI fallback 13 models | FULLY WORKING | Fallback chain including Gemini models and 9 OpenRouter models. |
 | Lyzr AI SuperFlow integration | FULLY WORKING | Orchestrates graph RAG prompts through Lyzr endpoints. |
 | Compliance score calculation | FULLY WORKING | Real-time calculation based on frameworks, relationships, and violations. |

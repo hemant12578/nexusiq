@@ -30,12 +30,10 @@ export const getApiUrl = (apiProp) => {
   return url.replace(/\/+$/, '');
 };
 
-// Friendly error — suppress scary raw messages
 export const friendlyError = (e) => {
-  if (e.code === 'ECONNABORTED') return 'Request timed out. Try a smaller file.';
+  if (e.code === 'ECONNABORTED') return 'Request timed out. Please retry.';
   const detail = e.response?.data?.detail;
   if (typeof detail === 'string') return detail;
-  // Suppress transient network errors — return null so toast is skipped
-  if (e.message === 'Network Error') return null;
-  return e.message || 'Something went wrong';
+  if (e.message === 'Network Error' || !e.response) return 'Hardware / Server Not Connected';
+  return 'Hardware Not Connected';
 };

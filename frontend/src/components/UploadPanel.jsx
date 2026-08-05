@@ -196,6 +196,12 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading, user }) 
     setUploading(false)
   }
 
+  useEffect(() => {
+    const handleTrigger = () => triggerEdgeIncident()
+    window.addEventListener("trigger-rpi-incident", handleTrigger)
+    return () => window.removeEventListener("trigger-rpi-incident", handleTrigger)
+  }, [baseUrl, user])
+
   const triggerEdgeIncident = async () => {
     setLoading(true)
     setUploading(true)

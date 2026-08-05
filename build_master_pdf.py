@@ -366,7 +366,7 @@ def build_pdf(filename):
         [
             Paragraph("Layer 5: Database", table_cell_bold),
             Paragraph("Supabase PostgreSQL,<br/>Firebase Auth & Firestore", table_cell_style),
-            Paragraph("Stores full graph state JSON in `nexusiq_graphs` table. Handles Google OAuth & user query audit logs in Firestore. Razorpay HMAC verification for subscriptions.", table_cell_style)
+            Paragraph("Live PostgreSQL graph persistence via Supabase (`tahskdacogqvuyqsvbwq`). Handles Google OAuth & user query audit logs in Firestore. HMAC verification for subscriptions.", table_cell_style)
         ]
     ]
     arch_table = Table(arch_data, colWidths=[1.2*inch, 1.8*inch, 4.5*inch])

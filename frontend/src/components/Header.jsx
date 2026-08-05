@@ -185,6 +185,15 @@ ${reportData.audit_verdict}
             </button>
 
             <button
+              onClick={() => window.dispatchEvent(new Event("trigger-rpi-incident"))}
+              className="px-3.5 py-1.5 rounded-xl bg-amber-950/60 hover:bg-amber-900/80 border border-amber-700/40 text-amber-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md shadow-amber-900/20 hover-lift"
+              title="Trigger a physical IoT RPi edge incident"
+            >
+              <Activity className="w-3.5 h-3.5 text-amber-400" />
+              <span>Trigger Edge Incident</span>
+            </button>
+
+            <button
               onClick={handleExportAuditReport}
               disabled={downloadingReport}
               className="px-3.5 py-1.5 rounded-xl bg-purple-950/60 hover:bg-purple-900/80 border border-purple-700/40 text-purple-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md shadow-purple-900/20 hover-lift"

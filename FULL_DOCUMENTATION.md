@@ -235,7 +235,7 @@ stateDiagram-v2
 - **Real-Time Feed**: Server-Sent Events (`EventSource` on `/sse`).
 
 ### 3.3 Database & Authentication Layer
-- **Managed PostgreSQL**: Supabase (`nexusiq_graphs` table). Graph data is serialized as JSONB and automatically synced upon graph updates.
+- **Managed PostgreSQL**: Supabase (`tahskdacogqvuyqsvbwq.supabase.co` - `nexusiq_graphs` table) with dynamic graph state JSON synchronization.
 - **Authentication**: Firebase Auth (Email/Password + Google OAuth).
 - **User Store**: Cloud Firestore tracking query history, user workspace profiles, and audit event logs.
 
