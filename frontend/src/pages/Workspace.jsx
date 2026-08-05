@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import axios from 'axios'
 import GraphView from '../components/GraphView'
 import UploadPanel from '../components/UploadPanel'
@@ -6,14 +6,25 @@ import QueryInterface from '../components/QueryInterface'
 import StatsBar from '../components/StatsBar'
 import NodeDetail from '../components/NodeDetail'
 import ActivityFeed from '../components/ActivityFeed'
+import OnboardingTour from '../components/OnboardingTour'
 import { BrainCircuit, FileUp, Mic, FileText, Cpu, Radio } from 'lucide-react'
 import { getApiUrl } from '../utils/api'
 
 export default function Workspace({ API, graphData, stats, loading, setLoading, selectedNode, setSelectedNode, fetchGraph, fetchStats, handleUploadSuccess, user }) {
   const [activityRefreshKey, setActivityRefreshKey] = useState(0)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
+  const [showTour, setShowTour] = useState(false)
 
-  const wrappedHandleUploadSuccess = () => {
+  useEffect(() => {
+    if (!localStorage.getItem("nexusiq_onboarding_done")) {
+      setShowTour(true)
+    }
+    const handleShowTour = () => setShowTour(true)
+    window.addEventListener("show-onboarding-tour", handleShowTour)
+    return () => window.removeEventListener("show-onboarding-tour", handleShowTour)
+  }, [])
+
+  const onUpload = () => {
     handleUploadSuccess()
     setActivityRefreshKey(prev => prev + 1)
   }
@@ -34,7 +45,7 @@ export default function Workspace({ API, graphData, stats, loading, setLoading, 
     setShowClearConfirm(true)
   }
 
-  const executeClearGraph = async () => {
+  const confirmClear = async () => {
     setShowClearConfirm(false)
     setLoading(true)
     try {
@@ -56,17 +67,17 @@ export default function Workspace({ API, graphData, stats, loading, setLoading, 
 
       <div className="flex flex-1 overflow-hidden">
 
-        <div className="w-80 border-r border-purple-900/20 overflow-y-auto glass-strong">
+        <div className="w-80 border-r border-purple-900/20 overflow-y-auto glass-strong" data-tour-step="tour-upload-panel">
           <UploadPanel
             API={API}
-            onUploadSuccess={wrappedHandleUploadSuccess}
+            onUploadSuccess={onUpload}
             setLoading={setLoading}
             user={user}
           />
         </div>
 
 
-        <div className="flex-1 relative overflow-hidden">
+        <div className="flex-1 relative overflow-hidden" data-tour-step="tour-graph-view">
           {loading && (
             <div className="absolute inset-0 bg-black/60 backdrop-blur-md z-10 flex items-center justify-center animate-fade-in">
               <div className="flex flex-col items-center gap-4">
@@ -91,7 +102,7 @@ export default function Workspace({ API, graphData, stats, loading, setLoading, 
           />
 
 
-          {/* show empty state if no nodes */}
+          {/* Empty state */}
           {graphData.nodes.length === 0 && !loading && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="text-center space-y-5 animate-float pointer-events-auto max-w-md p-8 rounded-3xl bg-nexus-800/40 backdrop-blur-xl border border-purple-900/30 glow-border">
@@ -127,7 +138,7 @@ export default function Workspace({ API, graphData, stats, loading, setLoading, 
         </div>
 
 
-        <div className="w-96 border-l border-purple-900/20 flex flex-col glass-strong">
+        <div className="w-96 border-l border-purple-900/20 flex flex-col glass-strong" data-tour-step="tour-query-panel">
           <div className="flex-1 overflow-y-auto">
             <QueryInterface API={API} onQuery={() => { fetchGraph(); fetchStats(); setActivityRefreshKey(prev => prev + 1); }} user={user} />
           </div>
@@ -150,7 +161,7 @@ export default function Workspace({ API, graphData, stats, loading, setLoading, 
                 Cancel
               </button>
               <button
-                onClick={executeClearGraph}
+                onClick={confirmClear}
                 className="px-4 py-2 rounded-xl text-sm font-bold bg-red-600/80 hover:bg-red-500 text-white shadow-lg shadow-red-900/50 transition-colors"
               >
                 Yes, clear it
@@ -160,6 +171,7 @@ export default function Workspace({ API, graphData, stats, loading, setLoading, 
         </div>
       )}
 
+      {showTour && <OnboardingTour onComplete={() => setShowTour(false)} />}
     </div>
   )
 }

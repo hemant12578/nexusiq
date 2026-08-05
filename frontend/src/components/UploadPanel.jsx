@@ -1,6 +1,6 @@
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import axios from "axios"
-import { FolderUp, FileUp, Mic, FileText, Video, CheckCircle2, Zap, Sparkles, Database, Layers, AlertTriangle, X } from "lucide-react"
+import { FolderUp, FileUp, Mic, FileText, Video, CheckCircle2, Zap, Sparkles, Database, Layers, AlertTriangle, X, Radio } from "lucide-react"
 import { saveUploadRecord } from '../services/firestoreService'
 import { getApiUrl, friendlyError } from '../utils/api'
 
@@ -16,6 +16,15 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading, user }) 
   const chunksRef = useRef([])
   const toastTimer = useRef(null)
   const baseUrl = getApiUrl(API)
+
+  const [edgeHealthy, setEdgeHealthy] = useState(false)
+  const [edgeIncident, setEdgeIncident] = useState(null)
+
+  useEffect(() => {
+    axios.get(`${baseUrl}/health`)
+      .then(() => setEdgeHealthy(true))
+      .catch(() => setEdgeHealthy(false))
+  }, [baseUrl])
 
   const showToast = (msg, type = 'error') => {
     if (toastTimer.current) clearTimeout(toastTimer.current)
@@ -187,6 +196,34 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading, user }) 
     setUploading(false)
   }
 
+  const triggerEdgeIncident = async () => {
+    setLoading(true)
+    setUploading(true)
+    const temp = (32.5 + Math.random() * 5).toFixed(1)
+    const incidentText = `[CRITICAL INCIDENT] Edge node ESP32_DHT11 reported temperature ${temp}C exceeding threshold 32.0C in Server Room B. Cooling fan failure detected. Violation of ISO 27001 physical environmental security policy.`
+    try {
+      const res = await axios.post(`${baseUrl}/upload-text`, {
+        text: incidentText,
+        source_name: "rpi_edge_sensor"
+      })
+      setUploads(prev => [...prev, {
+        name: "Edge Incident Log",
+        entities: res.data.entities_found,
+        relationships: res.data.relationships_found,
+        type: "text",
+        ts: Date.now()
+      }])
+      setEdgeIncident({ temp, timestamp: new Date().toLocaleTimeString(), severity: "CRITICAL" })
+      saveUploadRecord(user?.uid, 'Edge Incident', 'text', res.data.entities_found, res.data.relationships_found)
+      onUploadSuccess()
+      flashSuccess()
+    } catch (e) {
+      showToast(friendlyError(e))
+    }
+    setLoading(false)
+    setUploading(false)
+  }
+
   const typeIcons = { pdf: FileUp, audio: Mic, text: FileText, video: Video }
   const typeColors = { pdf: "from-purple-500/10 to-purple-900/10", audio: "from-rose-500/10 to-rose-900/10", text: "from-cyan-500/10 to-cyan-900/10", video: "from-amber-500/10 to-amber-900/10" }
 
@@ -291,6 +328,39 @@ export default function UploadPanel({ API, onUploadSuccess, setLoading, user }) 
         </button>
       </div>
 
+      <div className="pt-2 border-t border-purple-900/40 mt-4 space-y-3" data-tour-step="tour-edge-sim">
+        <div className="flex items-center justify-between">
+          <h2 className="text-purple-400 font-semibold text-xs uppercase tracking-widest flex items-center gap-2">
+            <Radio className="w-4 h-4 text-emerald-400" />
+            <span>Edge Hardware Simulator</span>
+          </h2>
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-black/40 border border-white/10 text-[9px] uppercase">
+            <span className={`w-1.5 h-1.5 rounded-full ${edgeHealthy ? 'bg-emerald-400 animate-pulse' : 'bg-red-500'}`} />
+            <span className={edgeHealthy ? 'text-emerald-300' : 'text-red-400'}>{edgeHealthy ? 'RPi Connected' : 'Offline'}</span>
+          </div>
+        </div>
+        
+        <button
+          onClick={triggerEdgeIncident}
+          disabled={uploading}
+          className="w-full py-2.5 bg-amber-950/60 hover:bg-amber-900/80 rounded-xl text-xs font-semibold uppercase tracking-wider text-amber-300 transition-all border border-amber-800/40 shadow-lg shadow-amber-900/20 ripple-effect hover-lift flex items-center justify-center gap-2 disabled:opacity-50"
+        >
+          <AlertTriangle className="w-4 h-4 text-amber-400" />
+          <span>Trigger Edge Incident</span>
+        </button>
+
+        {edgeIncident && (
+          <div className="bg-red-950/40 border border-red-900/50 rounded-xl p-3 text-xs animate-fade-in">
+            <div className="flex justify-between items-center text-red-300 font-mono text-[10px] mb-1">
+              <span>DEVICE: ESP32_DHT11</span>
+              <span>{edgeIncident.timestamp}</span>
+            </div>
+            <div className="text-gray-300">
+              <span className="font-bold text-red-400">[{edgeIncident.severity}]</span> Temperature <span className="text-white font-bold">{edgeIncident.temp}°C</span> exceeded safe threshold. ISO 27001 violation logged.
+            </div>
+          </div>
+        )}
+      </div>
 
       {uploads.length > 0 && (
         <div className="space-y-2 pt-2">

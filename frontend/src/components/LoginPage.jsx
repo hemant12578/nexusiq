@@ -11,7 +11,7 @@ export default function LoginPage({ onLoginSuccess }) {
   const [password, setPassword] = useState("judges123")
   const [scanning, setScanning] = useState(false)
   const [authed, setAuthed] = useState(false)
-  const [firebaseStatus, setFirebaseStatus] = useState("")
+  const [statusMsg, setStatusMsg] = useState("")
   const [resetMsg, setResetMsg] = useState("")
   const [resetError, setResetError] = useState("")
   const [resetLoading, setResetLoading] = useState(false)
@@ -33,7 +33,7 @@ export default function LoginPage({ onLoginSuccess }) {
     setResetLoading(false)
   }
 
-  const executeLoginSuccess = (userObj) => {
+  const finishLogin = (userObj) => {
     setScanning(false)
     setAuthed(true)
     setTimeout(() => {
@@ -47,28 +47,28 @@ export default function LoginPage({ onLoginSuccess }) {
   const handleLogin = async (e) => {
     e.preventDefault()
     setScanning(true)
-    setFirebaseStatus("")
+    setStatusMsg("")
 
     try {
       const res = await signInWithEmailAndPassword(auth, email, password)
-      setFirebaseStatus("Authenticated")
-      executeLoginSuccess({ email: res.user.email, role, uid: res.user.uid })
+      setStatusMsg("Authenticated")
+      finishLogin({ email: res.user.email, role, uid: res.user.uid })
     } catch (err) {
       console.error("Firebase auth failed:", err)
-      setFirebaseStatus(err.message || "Authentication Failed")
+      setStatusMsg(err.message || "Authentication Failed")
       setScanning(false)
     }
   }
 
   const handleGoogleLogin = async () => {
     setScanning(true)
-    setFirebaseStatus("Google OAuth")
+    setStatusMsg("Google OAuth")
     try {
       const result = await signInWithPopup(auth, googleProvider)
-      executeLoginSuccess({ email: result.user.email, role: "officer", uid: result.user.uid })
+      finishLogin({ email: result.user.email, role: "officer", uid: result.user.uid })
     } catch (err) {
       console.error("Google login failed:", err)
-      setFirebaseStatus(err.message || "Google Login Failed")
+      setStatusMsg(err.message || "Google Login Failed")
       setScanning(false)
     }
   }
@@ -117,7 +117,7 @@ export default function LoginPage({ onLoginSuccess }) {
               <div className="text-sm text-emerald-300 font-bold tracking-wide">
                 Logged in
               </div>
-              <div className="text-xs text-emerald-400/80 font-mono">{firebaseStatus || "Session Secured"}</div>
+              <div className="text-xs text-emerald-400/80 font-mono">{statusMsg || "Session Secured"}</div>
               <div className="text-[10px] text-gray-400 pt-1">Redirecting...</div>
             </div>
           )}

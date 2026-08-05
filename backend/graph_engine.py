@@ -63,7 +63,7 @@ class GraphEngine:
         self.save_to_storage()
     
     def delete_node(self, node_id: str) -> bool:
-        """Remove a specific node and its associated edges from NetworkX graph"""
+        # removes node and its edges
         if node_id in self.G:
             self.G.remove_node(node_id)
             self.save_to_storage()
@@ -71,13 +71,11 @@ class GraphEngine:
         return False
     
     def get_graph_json(self) -> Dict:
-        """build the json blob for the frontend"""
         if len(self.G) == 0:
             return {"nodes": [], "edges": [], "metrics": self.get_analytics_metrics()}
 
         try:
-            # Calculate PageRank for node importance metrics
-            # Note: This operation might require optimization for graphs >1k nodes
+            # TODO: pr is slow for large graphs, maybe optimize later
             pagerank = nx.pagerank(self.G.to_undirected(), weight=None)
         except Exception:
             pagerank = {n: 1.0 / max(len(self.G), 1) for n in self.G.nodes()}
@@ -118,7 +116,8 @@ class GraphEngine:
         isolated = len(list(nx.isolates(self.G))) if num_nodes > 0 else 0
         
         density = nx.density(self.G) if num_nodes > 1 else 0.0
-        compliance_score = round(min(100.0, (1.0 - (isolated / max(num_nodes, 1))) * 85 + (density * 15) + (num_nodes * 0.5)), 1) if num_nodes > 0 else 100.0
+        compliance_data = self.calculate_compliance_score()
+        compliance_score = compliance_data["score"]
 
         return {
             "total_nodes": num_nodes,
@@ -127,7 +126,69 @@ class GraphEngine:
             "isolated_nodes": isolated,
             "graph_density": round(density, 4),
             "compliance_readiness_score": compliance_score,
+            "compliance_breakdown": compliance_data["breakdown"],
             "risk_level": "LOW" if compliance_score >= 80 else ("MEDIUM" if compliance_score >= 50 else "HIGH")
+        }
+
+    def calculate_compliance_score(self) -> Dict:
+        if len(self.G) == 0:
+            return {
+                "score": 100.0,
+                "breakdown": {
+                    "base": 100.0,
+                    "frameworks": 0.0,
+                    "policies": 0.0,
+                    "relationships": 0.0,
+                    "violations": 0.0,
+                    "frameworks_detected": [],
+                }
+            }
+
+        framework_keywords = ["iso 27001", "gdpr", "hipaa", "soc 2", "pci-dss", "nist", "eu ai act"]
+        frameworks_detected = set()
+        policy_count = 0
+        violation_count = 0
+        critical_count = 0
+        
+        for node_id, data in self.G.nodes(data=True):
+            node_type = data.get("type", "").lower()
+            name = data.get("name", "").lower()
+            
+            if node_type == "policy":
+                policy_count += 1
+                
+            if node_type == "violation" or "violation" in name:
+                violation_count += 1
+            if node_type == "incident" and "critical" in name:
+                critical_count += 1
+                
+            for fw in framework_keywords:
+                if fw in name:
+                    frameworks_detected.add(fw.upper())
+
+        relationship_count = len(self.G.edges)
+
+        base_score = 50.0
+        fw_bonus = len(frameworks_detected) * 5.0
+        policy_bonus = policy_count * 2.0
+        rel_bonus = relationship_count * 1.0
+        
+        crit_penalty = critical_count * 10.0
+        viol_penalty = violation_count * 5.0
+        
+        total_score = base_score + fw_bonus + policy_bonus + rel_bonus - crit_penalty - viol_penalty
+        total_score = max(0.0, min(100.0, total_score))
+
+        return {
+            "score": round(total_score, 1),
+            "breakdown": {
+                "base": 50.0,
+                "frameworks": round(fw_bonus, 1),
+                "policies": round(policy_bonus, 1),
+                "relationships": round(rel_bonus, 1),
+                "violations": round(-(crit_penalty + viol_penalty), 1),
+                "frameworks_detected": list(frameworks_detected)
+            }
         }
 
     def generate_audit_report(self) -> Dict:
@@ -287,11 +348,11 @@ class GraphEngine:
             }
             res = requests.post(url, json=payload, headers=headers, timeout=5)
             if res.status_code in [200, 201]:
-                print("[Supabase] Knowledge Graph synced to Supabase managed database")
+                print("synced to supabase")
             else:
-                print(f"[Supabase] Sync status: {res.status_code} — using local storage fallback")
+                print(f"supa sync failed: {res.status_code}")
         except Exception as e:
-            print(f"[Supabase] Sync notice: {e} — using local storage fallback")
+            print(f"supa error: {e}")
 
     def load_from_supabase(self) -> bool:
         try:
@@ -314,10 +375,10 @@ class GraphEngine:
                         self.G.add_edge(edge['from'], edge['to'], relation=edge.get('relation',''), source=edge.get('source',''))
                     self.documents = set(data.get('documents', []))
                     self.id_map = data.get('id_map', {})
-                    print("[Supabase] Knowledge Graph loaded from Supabase managed database")
+                    print("loaded graph from supabase")
                     return True
         except Exception as e:
-            print(f"[Supabase] Failed to load graph from Supabase: {e}")
+            print(f"failed to load from supa: {e}")
         return False
 
     def save_to_file(self, path='graph_data.json'):
@@ -345,7 +406,7 @@ class GraphEngine:
             self.documents = set(data.get('documents', []))
             self.id_map = data.get('id_map', {})
         except Exception as e:
-            print(f'Failed to load graph: {e}')
+            print(f'failed loading local graph: {e}')
     
     def clear(self):
         self.G.clear()

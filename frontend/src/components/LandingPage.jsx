@@ -30,13 +30,11 @@ export default function LandingPage({ user }) {
   const [openFaq, setOpenFaq] = useState(null)
   const [liveStats, setLiveStats] = useState(null)
 
-  // Fetch live system statistics
   const API = (import.meta.env.VITE_API_URL || 'https://nexusiq-backend-production.up.railway.app').replace(/\/+$/, '')
   useEffect(() => {
     axios.get(`${API}/stats`).then(r => setLiveStats(r.data)).catch(() => {})
   }, [])
 
-  // Define feature showcase content
   const featureTabs = {
     pdf: {
       title: "PDF parsing",
@@ -97,7 +95,7 @@ export default function LandingPage({ user }) {
         </div>
 
         <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight gradient-text max-w-5xl mx-auto">
-          NexusIQ: Zero-Hallucination Compliance Intelligence Platform
+          NexusIQ: Accurate Compliance Knowledge Graph
         </h1>
 
         <p className="text-gray-300 text-base md:text-lg max-w-3xl mx-auto font-light leading-relaxed">
@@ -143,7 +141,6 @@ export default function LandingPage({ user }) {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto pt-8">
-          {/* Render live metrics dashboard */}
           {[
             { label: "Documents Processed", value: liveStats ? liveStats.documents_processed : "—", sub: "Live from backend" },
             { label: "Graph Nodes", value: liveStats ? liveStats.total_nodes : "—", sub: "Entity extraction" },
@@ -173,7 +170,7 @@ export default function LandingPage({ user }) {
             <div className="w-10 h-10 rounded-xl bg-purple-950/60 border border-purple-800/40 flex items-center justify-center text-purple-400">
               <ShieldCheck className="w-5 h-5" />
             </div>
-            <h3 className="font-semibold text-gray-200">Zero-Hallucination Graph RAG</h3>
+            <h3 className="font-semibold text-gray-200">Graph RAG</h3>
             <p className="text-sm text-gray-400 font-light leading-relaxed">
               Explicit knowledge graph paths ensure every answer is grounded, cited, and verifiable.
             </p>
@@ -241,7 +238,7 @@ export default function LandingPage({ user }) {
           </div>
           <h2 className="text-3xl font-bold tracking-tight gradient-text">How it works</h2>
           <p className="text-gray-400 text-xs md:text-sm max-w-xl mx-auto font-light">
-            Explore how NexusIQ processes heterogeneous regulatory assets into zero-hallucination compliance intelligence.
+            Explore how NexusIQ processes regulatory assets into a verifiable knowledge graph.
           </p>
         </div>
 

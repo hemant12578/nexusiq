@@ -263,7 +263,7 @@ def clear_graph_endpoint():
     graph.clear()
     stats["documents_processed"] = 0
     sse_events.append({'type': 'clear', 'timestamp': time.time()})
-    return {"success": True, "message": "Graph cleared successfully"}
+    return {"success": True, "message": "graph cleared"}
 
 @app.get("/export-graph")
 @app.get("/export-graph/")
@@ -282,6 +282,10 @@ def get_contradictions():
 def get_recent_changes(hours: int = 24):
     return {"changes": graph.get_recent_changes(hours)}
 
+@app.get("/compliance-score")
+def get_compliance_score():
+    return graph.calculate_compliance_score()
+
 @app.get("/stats")
 def get_stats():
     graph_data = graph.get_graph_json()
@@ -293,9 +297,9 @@ def get_stats():
         "documents_processed": stats["documents_processed"],
         "total_queries": stats["total_queries"],
         "uptime_seconds": int(time.time() - stats["start_time"]),
-        "compliance_score": metrics.get("compliance_readiness_score", 98.4),
+        "compliance_score": metrics.get("compliance_readiness_score"),
         "risk_level": metrics.get("risk_level", "LOW"),
-        "hallucination_rate": hal_stats.get("hallucination_rate", 0.0)
+        "hallucination_stats": hal_stats
     }
 
 @app.get("/export-report")
@@ -353,12 +357,9 @@ def reset():
     graph.clear()
     stats["documents_processed"] = 0
     stats["total_queries"] = 0
-    return {"success": True, "message": "NexusIQ graph cleared"}
+    return {"success": True, "message": "graph nuked"}
 
-
-# ==========================================
-# RAZORPAY INTEGRATION ENDPOINTS
-# ==========================================
+# razorpay stuff
 
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")

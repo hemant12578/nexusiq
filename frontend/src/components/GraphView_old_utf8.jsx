@@ -1,6 +1,5 @@
-import { useEffect, useRef } from "react"
+﻿import { useEffect, useRef } from "react"
 import * as d3 from "d3"
-import { Trash2 } from "lucide-react"
 
 const NODE_COLORS = {
   person: "#00ff88",
@@ -11,20 +10,17 @@ const NODE_COLORS = {
   event: "#f97316",
   location: "#84cc16",
   unknown: "#6b7280"
-}
+} // Define node colors for different entity types
 
-export default function GraphView({ graphData, onNodeClick, onClearGraph }) {
+export default function GraphView({ graphData, onNodeClick }) {
   const svgRef = useRef(null)
   const simulationRef = useRef(null)
-
-  const nodesData = Array.isArray(graphData?.nodes) ? graphData.nodes : []
-  const edgesData = Array.isArray(graphData?.edges) ? graphData.edges : []
 
   const lastCountRef = useRef({ nodes: 0, edges: 0 })
 
   useEffect(() => {
     if (!svgRef.current) return
-    const newCount = { nodes: nodesData.length, edges: edgesData.length }
+    const newCount = { nodes: graphData.nodes.length, edges: graphData.edges.length }
     if (newCount.nodes === lastCountRef.current.nodes && newCount.edges === lastCountRef.current.edges) return
     lastCountRef.current = newCount
 
@@ -34,7 +30,7 @@ export default function GraphView({ graphData, onNodeClick, onClearGraph }) {
 
     d3.select(svgRef.current).selectAll("*").remove()
 
-    if (!nodesData.length) return
+    if (!graphData.nodes.length) return
 
     const width = svgRef.current.clientWidth
     const height = svgRef.current.clientHeight
@@ -57,6 +53,7 @@ export default function GraphView({ graphData, onNodeClick, onClearGraph }) {
 
 
     const filterSoft = defs.append("filter").attr("id", "glow-soft")
+    // Apply a soft glow filter for node highlighting
     filterSoft.append("feGaussianBlur").attr("stdDeviation", "3").attr("result", "coloredBlur")
     const fmSoft = filterSoft.append("feMerge")
     fmSoft.append("feMergeNode").attr("in", "coloredBlur")
@@ -102,27 +99,17 @@ export default function GraphView({ graphData, onNodeClick, onClearGraph }) {
         .on("zoom", (event) => g.attr("transform", event.transform))
     )
 
-    const nodes = nodesData.map(n => ({ ...n }))
-    
-    const nodeIdMap = new Map()
-    nodes.forEach(n => {
-      nodeIdMap.set(String(n.id).toLowerCase().trim(), n.id)
-    })
+    const nodes = graphData.nodes.map(n => ({ ...n }))
+    const nodeIds = new Set(nodes.map(n => n.id))
+    const links = graphData.edges
+      .filter(e => nodeIds.has(e.from) && nodeIds.has(e.to))
+      .map(e => ({
+        source: e.from,
+        target: e.to,
+        relation: e.relation
+      }))
 
-    const links = edgesData
-      .map(e => {
-        // e.source is the document name from backend, DO NOT USE IT for node matching. Use e.from.
-        const rawSource = String(e.from).toLowerCase().trim()
-        const rawTarget = String(e.to).toLowerCase().trim()
-        return {
-          source: nodeIdMap.get(rawSource),
-          target: nodeIdMap.get(rawTarget),
-          relation: e.relation
-        }
-      })
-      .filter(e => e.source !== undefined && e.target !== undefined)
-
-
+    // Configure D3 force simulation parameters
     const simulation = d3.forceSimulation(nodes)
       .force("link", d3.forceLink(links).id(d => d.id).distance(150))
       .force("charge", d3.forceManyBody().strength(-600))
@@ -139,16 +126,22 @@ export default function GraphView({ graphData, onNodeClick, onClearGraph }) {
       .data(links)
       .join("line")
       .attr("stroke", "#7c3aed")
-      .attr("stroke-opacity", 0.4) // Slightly more visible
-      .attr("stroke-width", 1.8) // Slightly thicker
+      .attr("stroke-opacity", 0)
+      .attr("stroke-width", 1.5)
       .attr("stroke-dasharray", "6 3")
       .attr("marker-end", "url(#arrow)")
+
+
+    link.transition()
+      .delay((d, i) => 300 + i * 50)
+      .duration(600)
+      .attr("stroke-opacity", 0.3)
 
 
     function animateDash() {
       link
         .attr("stroke-dashoffset", 0)
-        .transition("dashAnim")
+        .transition()
         .duration(3000)
         .ease(d3.easeLinear)
         .attr("stroke-dashoffset", -18)
@@ -250,37 +243,37 @@ export default function GraphView({ graphData, onNodeClick, onClearGraph }) {
       })
       .on("mouseover", function(event, d) {
         d3.select(this)
-          .transition("nodeHover").duration(200)
+          .transition().duration(200)
           .attr("r", (14 + Math.min(d.connections || 0, 6) * 1.5) + 5)
           .attr("fill-opacity", 1)
           .attr("filter", "url(#glow-strong)")
           .attr("stroke-width", 3)
 
 
-        link.transition("hoverAnim").duration(200)
+        link.transition().duration(200)
           .attr("stroke-opacity", l =>
             l.source.id === d.id || l.target.id === d.id ? 0.7 : 0.1
           )
           .attr("stroke-width", l =>
-            l.source.id === d.id || l.target.id === d.id ? 2.5 : 1.8
+            l.source.id === d.id || l.target.id === d.id ? 2.5 : 1
           )
-        linkLabel.transition("labelHover").duration(200)
+        linkLabel.transition().duration(200)
           .attr("fill-opacity", l =>
             l.source.id === d.id || l.target.id === d.id ? 0.9 : 0.15
           )
       })
       .on("mouseout", function(event, d) {
         d3.select(this)
-          .transition("nodeHover").duration(300)
+          .transition().duration(300)
           .attr("r", 14 + Math.min(d.connections || 0, 6) * 1.5)
           .attr("fill-opacity", 0.9)
           .attr("filter", "url(#glow-soft)")
           .attr("stroke-width", 2)
 
-        link.transition("hoverAnim").duration(300)
-          .attr("stroke-opacity", 0.4)
-          .attr("stroke-width", 1.8)
-        linkLabel.transition("labelHover").duration(300)
+        link.transition().duration(300)
+          .attr("stroke-opacity", 0.3)
+          .attr("stroke-width", 1.5)
+        linkLabel.transition().duration(300)
           .attr("fill-opacity", 0.5)
       })
       .call(
@@ -303,7 +296,7 @@ export default function GraphView({ graphData, onNodeClick, onClearGraph }) {
       .selectAll("text")
       .data(nodes)
       .join("text")
-      .text(d => d.name.length > 16 ? d.name.substring(0, 16) + "…" : d.name)
+      .text(d => d.name.length > 16 ? d.name.substring(0, 16) + "ΓÇª" : d.name)
       .attr("font-size", "10px")
       .attr("fill", "#e2e8f0")
       .attr("fill-opacity", 0)
@@ -381,27 +374,15 @@ export default function GraphView({ graphData, onNodeClick, onClearGraph }) {
 
   return (
     <div className="relative w-full h-full">
-      {/* Legend */}
-      {nodesData.length > 0 && (
+      {/* 7-Type Node Color Legend Overlay */}
+      {graphData.nodes.length > 0 && (
         <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={handleExport}
-              className="px-3 py-1.5 text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 rounded-lg shadow transition-colors max-w-fit"
-            >
-              Export Graph
-            </button>
-            {onClearGraph && (
-              <button 
-                onClick={onClearGraph}
-                className="px-3 py-1.5 text-xs font-semibold text-red-200 bg-red-950/70 hover:bg-red-900/90 border border-red-800/40 rounded-lg shadow transition-colors flex items-center gap-1.5"
-                title="Clear all nodes and reset knowledge graph"
-              >
-                <Trash2 className="w-3.5 h-3.5 text-red-400" />
-                <span>Clear Graph</span>
-              </button>
-            )}
-          </div>
+          <button 
+            onClick={handleExport}
+            className="px-3 py-1.5 text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 rounded-lg shadow transition-colors max-w-fit"
+          >
+            Export Graph
+          </button>
           <div className="bg-nexus-900/80 backdrop-blur-md p-3 rounded-xl border border-purple-900/40 shadow-xl flex flex-wrap items-center gap-3 max-w-md">
           {[
             { label: "Person", color: NODE_COLORS.person },

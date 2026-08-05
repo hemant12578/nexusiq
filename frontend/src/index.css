@@ -23,6 +23,16 @@ body {
   overflow-y: auto;
 }
 
+::selection {
+  background: rgba(124, 58, 237, 0.4);
+  color: #ffffff;
+}
+
+::-moz-selection {
+  background: rgba(124, 58, 237, 0.4);
+  color: #ffffff;
+}
+
 /* ═══════════════════════════════════════════════
    ANIMATED BACKGROUND — Moving Gradient Mesh 
    ═══════════════════════════════════════════════ */

@@ -15,7 +15,7 @@ OPENROUTER_KEY = os.getenv("OPENROUTER_API_KEY")
 if GEMINI_KEY:
     genai.configure(api_key=GEMINI_KEY)
 
-# Primary Gemini Models
+# primary models
 GEMINI_MODELS = [
     "gemini-2.0-flash",
     "gemini-1.5-flash-latest",
@@ -23,7 +23,7 @@ GEMINI_MODELS = [
     "gemini-2.0-flash-lite-preview-02-05",
 ]
 
-# OpenRouter Free Models (verified active free endpoints)
+# fallback free models if gemini dies
 OPENROUTER_FREE_MODELS = [
     "meta-llama/llama-3.3-70b-instruct:free",
     "meta-llama/llama-3.1-8b-instruct:free",
@@ -166,14 +166,14 @@ def generate_text_response(prompt: str) -> str:
                 if res and res.text:
                     return res.text
             except Exception as e:
-                print(f"[Gemini Primary Failed - {model_name}]: {e}")
+                print(f"gemini fail ({model_name}): {e}")
                 continue
 
-    print("[LLM Engine] Falling back to OpenRouter Free models...")
+    print("gemini down, falling back to openrouter...")
     return call_openrouter_free(prompt)
 
 def fallback_extract_entities(text: str, filename: str) -> dict:
-    """Rich zero-fail local entity extractor for live demos when external AI APIs are rate-limited or keyless"""
+    # hack: regex extraction when api is dead
     entities = []
     relationships = []
     
@@ -260,7 +260,7 @@ def extract_entities(text: str, filename: str) -> dict:
                 "relationships": data.get("relationships", [])
             }
     except Exception as e:
-        print(f"[LLM Extraction Failed - Using Smart Local Fallback]: {e}")
+        print(f"extraction failed, using regex fallback: {e}")
 
     return fallback_extract_entities(text, filename)
 
@@ -336,11 +336,11 @@ def query_lyzr_webhook(user_question: str, networkx_retrieved_data: str) -> dict
     except HTTPException:
         raise
     except Exception as e:
-        print(f"[Lyzr AI Webhook Request Failed]: {e}")
-        raise HTTPException(status_code=500, detail=f"Lyzr AI Webhook request failed: {str(e)}")
+        print(f"lyzr webhook failed: {e}")
+        raise HTTPException(status_code=500, detail=f"webhook dead: {str(e)}")
 
 def answer_query(question: str, context: str, graph_node_count: int = 0, graph_edge_count: int = 0) -> dict:
-    # Direct Python handler for Greetings & Common FAQ phrases
+    # catch common greetings so we don't waste tokens
     q_norm = question.strip().lower().rstrip("?!.")
     greetings = {
         "hi": "Hi, I'm NexusIQ. Ask me about your uploaded documents.",
@@ -359,13 +359,13 @@ def answer_query(question: str, context: str, graph_node_count: int = 0, graph_e
             "sources": []
         }
 
-    # If Lyzr AI Webhook credentials/URL are configured, use Lyzr AI SuperFlow
+    # try lyzr first if configured
     lyzr_key = os.getenv("LYZR_API_KEY", "")
     lyzr_url = os.getenv("LYZR_WEBHOOK_URL", "")
     if lyzr_key or lyzr_url:
         return query_lyzr_webhook(question, context)
 
-    # Query Knowledge Graph via LLM
+    # fallback to normal llm query
     try:
         prompt = QUERY_PROMPT.replace(
             "{context}", context
@@ -415,7 +415,7 @@ def answer_query(question: str, context: str, graph_node_count: int = 0, graph_e
             "confidence_score": 0.0
         }
     except Exception as e:
-        print(f"[LLM Query Failed - Using Smart Context Fallback]: {e}")
+        print(f"query failed, dumping raw context: {e}")
         found_sources = list(set(re.findall(r'\[SOURCE:\s*(.*?)\]', context)))
         return {
             "answer": f"Based on the compliance knowledge graph context:\n\n{context[:350]}...",
@@ -444,7 +444,7 @@ def transcribe_audio(audio_bytes: bytes, filename: str) -> dict:
                         "entities": data.get("entities", [])
                     }
                 except Exception as e:
-                    print(f"[Gemini Audio Failed - {model_name}]: {e}")
+                    print(f"audio failed ({model_name}): {e}")
                     continue
 
         fallback_prompt = f"Compliance incident audio recording file name: {filename}. Transcribe and extract compliance summary."
@@ -482,7 +482,7 @@ def process_video(video_bytes: bytes, filename: str, mime_type: str = "video/mp4
                         "entities": data.get("entities", [])
                     }
                 except Exception as e:
-                    print(f"[Gemini Video Failed - {model_name}]: {e}")
+                    print(f"video failed ({model_name}): {e}")
                     continue
 
         fallback_prompt = f"Compliance video recording file name: {filename}. Extract video transcript and compliance summary."

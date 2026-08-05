@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-// Lazy load components to optimize bundle size
+// TODO: lazy load these later if bundle gets too big
 import Header from './components/Header'
 import Canvas3D from './components/Canvas3D'
 import LandingPage from './components/LandingPage'
@@ -16,11 +16,10 @@ import axios from 'axios'
 import { auth, onAuthStateChanged, signOut } from './firebase'
 import { getApiUrl } from './utils/api'
 
-// Configure API endpoint based on environment
 const API = getApiUrl()
 
 export default function App() {
-  // Persist user state to prevent flickering during auth initialization
+  // try to hydrate from localstorage so we don't flash the login screen
   const [user, setUser] = useState(() => {
     try {
       const saved = localStorage.getItem('nexusiq_user')
@@ -66,7 +65,7 @@ export default function App() {
       const res = await axios.get(`${baseUrl}/graph`)
       setGraphData(res.data)
     } catch (e) { 
-      // Handle edge case where empty graph throws 500 error
+      // hack: backend sometimes throws 500 if graph is completely empty
       console.error('Graph fetch error:', e) 
     }
   }
@@ -83,7 +82,7 @@ export default function App() {
     fetchGraph();
     fetchStats();
 
-    // Auto-reconnect & fetch latest graph/stats when returning to idle tab
+    // refresh when tab comes back to focus
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
         fetchGraph();

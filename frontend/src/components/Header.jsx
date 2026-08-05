@@ -176,6 +176,15 @@ ${reportData.audit_verdict}
         {location.pathname === "/workspace" && (
           <div className="flex items-center gap-3">
             <button
+              onClick={() => window.dispatchEvent(new Event("show-onboarding-tour"))}
+              className="px-3.5 py-1.5 rounded-xl bg-nexus-800/60 hover:bg-nexus-700/80 border border-purple-900/40 text-gray-400 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all hover-lift"
+              title="Show onboarding tour again"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+              <span>Tour</span>
+            </button>
+
+            <button
               onClick={handleExportAuditReport}
               disabled={downloadingReport}
               className="px-3.5 py-1.5 rounded-xl bg-purple-950/60 hover:bg-purple-900/80 border border-purple-700/40 text-purple-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md shadow-purple-900/20 hover-lift"

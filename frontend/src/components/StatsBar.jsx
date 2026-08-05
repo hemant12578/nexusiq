@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { Activity, Database, Layers, FolderCheck, ShieldCheck, Gauge } from "lucide-react"
+import ComplianceBreakdown from "./ComplianceBreakdown"
 
 // Component to animate number increments smoothly
 function AnimatedNumber({ value }) {
@@ -29,16 +30,16 @@ function AnimatedNumber({ value }) {
 
 export default function StatsBar({ stats }) {
   const [mounted, setMounted] = useState(false)
-  useEffect(() => { setMounted(true) }, [])
+  const [showCompliancePopup, setShowCompliancePopup] = useState(false)
 
   useEffect(() => { setMounted(true) }, [])
 
-  // Fallback values for compliance metrics
-  const complianceScore = stats.compliance_score || 98.4
-  const riskLevel = stats.risk_level || "LOW"
+  // Remove fallback values for compliance metrics
+  const complianceScore = stats.compliance_score ?? '—'
+  const riskLevel = stats.risk_level ?? "N/A"
 
   return (
-    <div className={`scan-line bg-purple-950/20 border-b border-purple-900/20 px-6 py-2 flex items-center justify-between gap-6 text-xs text-gray-400 font-light transition-all duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+    <div data-tour-step="tour-stats-bar" className={`scan-line bg-purple-950/20 border-b border-purple-900/20 px-6 py-2 flex items-center justify-between gap-6 text-xs text-gray-400 font-light transition-all duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
       <div className="flex gap-6 items-center">
         <span className="flex items-center gap-1.5 transition-all duration-300 hover:text-gray-200">
           <span className="relative flex items-center gap-1.5">
@@ -68,21 +69,35 @@ export default function StatsBar({ stats }) {
           <span><AnimatedNumber value={stats.total_queries || 0} /> queries served</span>
         </span>
 
-        <span className="flex items-center gap-1.5 transition-all duration-300 hover:text-gray-200">
+        <span 
+          className="flex items-center gap-1.5 transition-all duration-300 hover:text-gray-200 cursor-help"
+          title={stats.hallucination_stats ? `Queries: ${stats.hallucination_stats.total_queries} | Grounded: ${stats.hallucination_stats.grounded} | Refused: ${stats.hallucination_stats.refused} | Unverified: ${stats.hallucination_stats.unverified}` : "No stats available"}
+        >
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-          <span>{stats.hallucination_rate?.toFixed(1) || '0.0'}% hallucination rate</span>
+          <span>{stats.hallucination_stats?.hallucination_rate?.toFixed(1) ?? '0.0'}% hallucination rate</span>
         </span>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-purple-950/60 border border-purple-800/40 text-[11px]">
+      <div className="flex items-center gap-4 relative">
+        <button 
+          onClick={() => setShowCompliancePopup(!showCompliancePopup)}
+          className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-purple-950/60 border border-purple-800/40 text-[11px] cursor-pointer hover:bg-purple-900/80 transition-colors"
+        >
           <Gauge className="w-3 h-3 text-cyan-400" />
           <span className="text-gray-400 font-medium">Compliance Readiness:</span>
           <span className="text-cyan-300 font-bold font-mono">{complianceScore}%</span>
           <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${riskLevel === 'LOW' ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/30' : 'bg-amber-950/80 text-amber-300 border border-amber-500/30'}`}>
             {riskLevel} RISK
           </span>
-        </div>
+        </button>
+
+        {showCompliancePopup && (
+          <ComplianceBreakdown 
+            score={complianceScore} 
+            breakdown={stats.compliance_breakdown} 
+            onClose={() => setShowCompliancePopup(false)} 
+          />
+        )}
 
         <span className="flex items-center gap-2">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
