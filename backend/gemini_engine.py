@@ -270,12 +270,10 @@ def query_lyzr_webhook(user_question: str, networkx_retrieved_data: str) -> dict
         "x-api-key": lyzr_api_key,
         "Content-Type": "application/json"
     }
-    if lyzr_secret:
-        headers["x-webhook-secret"] = lyzr_secret
 
+    workflow_id = os.getenv("LYZR_WORKFLOW_ID", "90e58378-39e3-464e-857d-d2a6fa54adb2")
     payload = {
-        "chatInput": user_question,
-        "graphContext": networkx_retrieved_data,
+        "workflow_id": workflow_id,
         "input": [
             {
                 "chatInput": user_question,
@@ -283,9 +281,6 @@ def query_lyzr_webhook(user_question: str, networkx_retrieved_data: str) -> dict
             }
         ]
     }
-    workflow_id = os.getenv("LYZR_WORKFLOW_ID", "")
-    if workflow_id:
-        payload["workflow_id"] = workflow_id
 
     try:
         res = requests.post(lyzr_url, headers=headers, json=payload, timeout=30)
@@ -356,14 +351,11 @@ def answer_query(question: str, context: str, graph_node_count: int = 0, graph_e
             "sources": []
         }
 
-    # try lyzr first if configured, with graceful fallback to Gemini/OpenRouter if Lyzr endpoint errors
+    # execute Lyzr SuperFlow webhook directly when configured
     lyzr_key = os.getenv("LYZR_API_KEY", "")
     lyzr_url = os.getenv("LYZR_WEBHOOK_URL", "")
     if lyzr_key or lyzr_url:
-        try:
-            return query_lyzr_webhook(question, context)
-        except Exception as e:
-            print(f"Lyzr Webhook failed ({e}), proceeding to Gemini/OpenRouter fallback chain...")
+        return query_lyzr_webhook(question, context)
 
     # fallback to normal llm query
     try:
