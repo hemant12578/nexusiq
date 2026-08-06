@@ -81,12 +81,18 @@ export default function StatsBar({ stats }) {
       <div className="flex items-center gap-4 relative">
         <button 
           onClick={() => setShowCompliancePopup(!showCompliancePopup)}
-          className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-purple-950/60 border border-purple-800/40 text-[11px] cursor-pointer hover:bg-purple-900/80 transition-colors"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-950/80 border border-purple-700/50 text-xs cursor-pointer hover:bg-purple-900/90 transition-all whitespace-nowrap shadow-md shadow-purple-950/50 hover-lift"
         >
-          <Gauge className="w-3 h-3 text-cyan-400" />
-          <span className="text-gray-400 font-medium">Compliance Readiness:</span>
-          <span className="text-cyan-300 font-bold font-mono">{complianceScore}%</span>
-          <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${riskLevel === 'LOW' ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/30' : 'bg-amber-950/80 text-amber-300 border border-amber-500/30'}`}>
+          <Gauge className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+          <span className="text-gray-300 font-medium whitespace-nowrap">Compliance Readiness:</span>
+          <span className="text-cyan-300 font-bold font-mono text-xs whitespace-nowrap"><AnimatedNumber value={complianceScore} />%</span>
+          <span className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold tracking-wider uppercase whitespace-nowrap border shadow-sm ${
+            riskLevel === 'LOW' 
+              ? 'bg-emerald-950/90 text-emerald-300 border-emerald-500/40' 
+              : riskLevel === 'HIGH' || riskLevel === 'CRITICAL'
+                ? 'bg-rose-950/90 text-rose-300 border-rose-500/40'
+                : 'bg-amber-950/90 text-amber-300 border-amber-500/40'
+          }`}>
             {riskLevel} RISK
           </span>
         </button>
