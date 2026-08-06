@@ -18,22 +18,19 @@ if GEMINI_KEY:
 # primary models
 GEMINI_MODELS = [
     "gemini-2.0-flash",
-    "gemini-1.5-flash-latest",
-    "gemini-1.5-pro-latest",
-    "gemini-2.0-flash-lite-preview-02-05",
+    "gemini-1.5-flash",
+    "gemini-1.5-pro",
+    "gemini-2.0-flash-lite",
 ]
 
-# fallback free models if gemini dies
+# fallback free models if gemini dies (openrouter/free dynamically selects active free model)
 OPENROUTER_FREE_MODELS = [
-    "meta-llama/llama-3.3-70b-instruct:free",
-    "meta-llama/llama-3.1-8b-instruct:free",
-    "qwen/qwen-2.5-coder-32b-instruct:free",
-    "google/gemini-2.0-pro-exp-02-05:free",
-    "google/gemini-2.0-flash-lite-preview-02-05:free",
-    "deepseek/deepseek-r1-distill-llama-70b:free",
-    "google/gemma-2-9b-it:free",
-    "mistralai/mistral-7b-instruct:free",
-    "cognitivecomputations/dolphin-mixtral-8x7b:free",
+    "openrouter/free",
+    "google/gemma-4-31b-it:free",
+    "google/gemma-4-26b-a4b-it:free",
+    "nvidia/nemotron-3-nano-30b-a3b:free",
+    "cohere/north-mini-code:free",
+    "poolside/laguna-s-2.1:free",
 ]
 
 EXTRACT_PROMPT = """
@@ -359,11 +356,14 @@ def answer_query(question: str, context: str, graph_node_count: int = 0, graph_e
             "sources": []
         }
 
-    # try lyzr first if configured
+    # try lyzr first if configured, with graceful fallback to Gemini/OpenRouter if Lyzr endpoint errors
     lyzr_key = os.getenv("LYZR_API_KEY", "")
     lyzr_url = os.getenv("LYZR_WEBHOOK_URL", "")
     if lyzr_key or lyzr_url:
-        return query_lyzr_webhook(question, context)
+        try:
+            return query_lyzr_webhook(question, context)
+        except Exception as e:
+            print(f"Lyzr Webhook failed ({e}), proceeding to Gemini/OpenRouter fallback chain...")
 
     # fallback to normal llm query
     try:
