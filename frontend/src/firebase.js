@@ -4,7 +4,7 @@ import { getAuth, GoogleAuthProvider, signInWithEmailAndPassword, createUserWith
 import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, limit, serverTimestamp, doc, setDoc } from 'firebase/firestore'
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyApU_ma4iWxUfX1Dl8L7-dG03J2BdaUn6U",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "nexusiq-3e622.firebaseapp.com",
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "nexusiq-3e622",
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "nexusiq-3e622.firebasestorage.app",
