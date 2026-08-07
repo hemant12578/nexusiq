@@ -14,6 +14,11 @@ from dotenv import load_dotenv
 from gemini_engine import extract_entities, answer_query, transcribe_audio, process_video, get_hallucination_stats
 from graph_engine import GraphEngine
 import fitz
+import io
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -302,9 +307,112 @@ def get_stats():
         "hallucination_stats": hal_stats
     }
 
+def generate_pdf_bytes(report_data: dict) -> bytes:
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=letter,
+        rightMargin=36,
+        leftMargin=36,
+        topMargin=36,
+        bottomMargin=36
+    )
+    styles = getSampleStyleSheet()
+    
+    title_style = ParagraphStyle(
+        'DocTitle',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=18,
+        leading=22,
+        textColor=colors.HexColor("#1E1B4B")
+    )
+    h2_style = ParagraphStyle(
+        'DocH2',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=11,
+        leading=15,
+        textColor=colors.HexColor("#4338CA"),
+        spaceBefore=10,
+        spaceAfter=6
+    )
+    body_style = ParagraphStyle(
+        'DocBody',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=9,
+        leading=12,
+        textColor=colors.HexColor("#334155")
+    )
+    
+    story = []
+    story.append(Paragraph("NexusIQ — Enterprise Compliance & Graph Audit Report", title_style))
+    story.append(Spacer(1, 4))
+    story.append(Paragraph(f"Generated on: {report_data.get('timestamp', '')} | Advisory Lead: Sumit Sharan", body_style))
+    story.append(Spacer(1, 8))
+    story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#6366F1"), spaceBefore=2, spaceAfter=10))
+    
+    metrics_data = [
+        ["Compliance Score", report_data.get("overall_compliance_score", "N/A"), "Risk Level", report_data.get("risk_level", "LOW")],
+        ["Total Entities", str(report_data.get("total_entities", 0)), "Total Relationships", str(report_data.get("total_relationships", 0))],
+        ["Documents Indexed", str(len(report_data.get("documents_indexed", []))), "Audit Verdict", report_data.get("audit_verdict", "Verified")]
+    ]
+    t = Table(metrics_data, colWidths=[130, 130, 140, 140])
+    t.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor("#F8FAFC")),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor("#CBD5E1")),
+        ('FONTNAME', (0,0), (-1,-1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0,0), (-1,-1), 8.5),
+        ('TEXTCOLOR', (0,0), (-1,-1), colors.HexColor("#1E293B")),
+        ('PADDING', (0,0), (-1,-1), 5),
+    ]))
+    story.append(t)
+    story.append(Spacer(1, 10))
+    
+    story.append(Paragraph("Top Critical Graph Entities & Dependencies", h2_style))
+    top_entities = report_data.get("top_critical_entities", [])
+    if top_entities:
+        ent_rows = [["Entity Name", "Type", "Source Document", "Score"]]
+        for ent in top_entities[:10]:
+            ent_rows.append([
+                ent.get("name", "Unknown"),
+                ent.get("type", "unknown"),
+                ent.get("source", "N/A"),
+                f"{ent.get('importance_score', 0):.1f}"
+            ])
+        t_ent = Table(ent_rows, colWidths=[160, 100, 180, 100])
+        t_ent.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#EEF2FF")),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.HexColor("#3730A3")),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor("#CBD5E1")),
+            ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+            ('FONTSIZE', (0,0), (-1,-1), 8),
+            ('PADDING', (0,0), (-1,-1), 4),
+        ]))
+        story.append(t_ent)
+    else:
+        story.append(Paragraph("No graph entities indexed yet. Upload documents to populate graph dependencies.", body_style))
+        
+    doc.build(story)
+    buffer.seek(0)
+    return buffer.getvalue()
+
 @app.get("/export-report")
 def export_report():
     return graph.generate_audit_report()
+
+@app.get("/export-pdf")
+@app.get("/download-pdf")
+def export_pdf():
+    report_data = graph.generate_audit_report()
+    pdf_bytes = generate_pdf_bytes(report_data)
+    return StreamingResponse(
+        io.BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={"Content-Disposition": "attachment; filename=NexusIQ_Compliance_Audit_Report.pdf"}
+    )
 
 class QueryRequest(BaseModel):
     question: Optional[str] = None

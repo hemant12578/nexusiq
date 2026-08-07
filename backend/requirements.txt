@@ -11,3 +11,4 @@ gunicorn
 slowapi
 razorpay
 supabase
+reportlab
