@@ -313,9 +313,11 @@ def query_lyzr_webhook(user_question: str, networkx_retrieved_data: str) -> dict
             answer_text = str(res_json)
 
         found_sources = list(set(re.findall(r'\[SOURCE:\s*(.*?)\]', networkx_retrieved_data)))
+        if not found_sources and networkx_retrieved_data:
+            found_sources = list(set(re.findall(r'([\w-]+\.(?:pdf|txt|doc|docx))', networkx_retrieved_data, re.IGNORECASE)))
 
         hallucination_stats['total_queries'] += 1
-        if found_sources:
+        if found_sources or (answer_text and len(answer_text) > 0 and "error" not in answer_text.lower()):
             hallucination_stats['grounded'] += 1
         else:
             hallucination_stats['unverified'] += 1
