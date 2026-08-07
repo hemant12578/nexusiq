@@ -339,7 +339,7 @@ class GraphEngine:
                 },
                 'updated_at': time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
             }
-            url = f"{self.supabase_url}/rest/v1/nexusiq_graphs"
+            url = f"{self.supabase_url}/rest/v1/nexusiq_graphs?on_conflict=id"
             headers = {
                 'apikey': self.supabase_key,
                 'Authorization': f'Bearer {self.supabase_key}',
@@ -347,7 +347,7 @@ class GraphEngine:
                 'Prefer': 'resolution=merge-duplicates'
             }
             res = requests.post(url, json=payload, headers=headers, timeout=5)
-            if res.status_code in [200, 201]:
+            if res.status_code in [200, 201, 204]:
                 print("synced to supabase")
             else:
                 print(f"supa sync failed: {res.status_code}")
