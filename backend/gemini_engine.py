@@ -113,7 +113,12 @@ hallucination_stats = {'total_queries': 0, 'grounded': 0, 'refused': 0, 'unverif
 
 def get_hallucination_stats() -> dict:
     stats = hallucination_stats.copy()
-    stats['hallucination_rate'] = stats['unverified'] / max(stats['total_queries'], 1) * 100
+    total = stats['total_queries']
+    unverified = stats['unverified']
+    if total == 0 or unverified == 0:
+        stats['hallucination_rate'] = 0.0
+    else:
+        stats['hallucination_rate'] = round((unverified / max(total, 1)) * 100, 1)
     return stats
 
 def call_openrouter_free(prompt: str) -> str:
